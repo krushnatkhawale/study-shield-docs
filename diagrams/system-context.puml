@@ -1,0 +1,18 @@
+@startuml
+!include c4stdlib/C4_Context.puml
+!pragma layout smetana
+title System Context diagram (C4 Level 1)
+
+Person(parent, "Parent", "Auth, kid profiles, quiz setup, and results — uses the mobile app")
+Person(kid, "Kid", "Watches TV and plays quizzes during ad breaks")
+
+System(studyShield, "StudyShield / Open-School System", "Mobile + TV apps and the backend modulith that deliver ad-break learning quizzes and collect results")
+
+System_Ext(pg, "PostgreSQL", "Persists content, users and quiz attempts")
+
+Rel(parent, studyShield, "auth · kid profiles · quiz setup · results", "HTTPS")
+Rel(kid, studyShield, "watches TV, plays quizzes during ad breaks", "LAN + HTTPS")
+Rel(studyShield, pg, "persists data (content, users, attempts)", "JDBC")
+
+SHOW_LEGEND()
+@enduml

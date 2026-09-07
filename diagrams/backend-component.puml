@@ -1,0 +1,48 @@
+@startuml
+!include c4stdlib/C4_Component.puml
+!pragma layout smetana
+title Component diagram (C4 Level 3) — Backend modulith
+
+Container_Boundary(api, "Backend container — Spring Boot modulith") {
+    Component(content, "content/", "Spring Modulith module", "BoardController · ClassGradeController · SubjectController · ContentPackController · QuizController · QuestionController · QuizBundleController")
+    Component(contentEnt, "content entities", "JPA", "Board · ClassGrade · Subject · ContentPack · Quiz · Question · QuizBundle")
+
+    Component(user, "user/", "Spring Modulith module", "AuthController · UserController · ParentController · ParentProfileController · StudentController · ChildProfileController · JwtAuthFilter · JwtProvider · SecurityConfig")
+    Component(userEnt, "user entities", "JPA", "User · ParentProfile · ChildProfile")
+
+    Component(quiz, "quiz/", "Spring Modulith module", "QuizAttemptController · AttemptAnswerController")
+    Component(quizEnt, "quiz entities", "JPA", "QuizAttempt · AttemptAnswer")
+
+    Component(feedback, "feedback/", "Spring Modulith module", "QuestionFeedbackController (PUT/GET /questions/{id}/feedback)")
+    Component(feedbackEnt, "feedback entities", "JPA", "QuestionFeedback (per account_id, question_id)")
+
+    Component(tv, "tv/", "Spring Modulith module", "UserController · WifiNetworkController · ConnectedTVController")
+    Component(tvEnt, "tv entities", "JPA", "tv_users · WifiNetwork · ConnectedTV")
+
+    Component(common, "common/", "shared infrastructure", "GlobalExceptionHandler · CorsConfig · RequestLoggingInterceptor · DatabaseHealthIndicator")
+
+    Component(shared, "shared/", "cross-module interfaces", "ContentReference · UserReference")
+}
+
+ContainerDb(db, "PostgreSQL", "Relational database", "Schemas: content, user_, quiz, tv, public")
+
+Rel(user, content, "board/class-grade references")
+Rel(quiz, content, "ID references")
+Rel(quiz, user, "ID references")
+Rel(feedback, content, "validates question exists")
+Rel(content, common, "uses")
+Rel(user, common, "uses")
+Rel(quiz, common, "uses")
+Rel(feedback, common, "uses")
+Rel(tv, common, "uses")
+Rel(shared, content, "ContentReference")
+Rel(shared, user, "UserReference")
+
+Rel(contentEnt, db, "reads and writes rows", "JDBC")
+Rel(userEnt, db, "reads and writes rows", "JDBC")
+Rel(quizEnt, db, "reads and writes rows", "JDBC")
+Rel(feedbackEnt, db, "reads and writes rows", "JDBC")
+Rel(tvEnt, db, "reads and writes rows", "JDBC")
+
+SHOW_LEGEND()
+@enduml

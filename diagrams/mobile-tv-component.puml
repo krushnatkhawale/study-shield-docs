@@ -1,0 +1,37 @@
+@startuml
+!include c4stdlib/C4_Component.puml
+!pragma layout smetana
+title Component diagram (C4 Level 3) — Mobile & TV apps
+
+Container_Boundary(mobile, "Mobile app container — Android · Kotlin") {
+    Component(mui, "ui/", "screens + ViewModels", "Auth, kids, session/result, TV management")
+    Component(mdata, "data/", "repositories", "Auth · KidProfile · Parent · QuizLoader · QuizResult · Feedback · History · TrialContentDownloader")
+    Component(mnet, "network/", "Retrofit", "RetrofitClient · ApiService · AuthInterceptor")
+    Component(mworker, "worker/", "WorkManager", "StudySessionWorker")
+    Component(mlan, "LAN", "callback listener", "AccountDataGuard / SessionManager · LAN callback listener")
+}
+
+Container_Boundary(tva, "TV app container — Android TV · Kotlin") {
+    Component(tserver, "TvServerService", "service", "ServerSocket(8888) — receives InterruptionCommand")
+    Component(tengine, "MainActivity quiz engine", "activity", "QuizResultsScreen")
+    Component(tlock, "LockPersistenceManager", "preferences", "saved_lock")
+    Component(tboot, "BootReceiver", "broadcast receiver", "autostart on device boot")
+}
+
+Container_Boundary(be, "Backend container") {
+    Component(api, "API", "Spring Boot modulith", "REST over HTTPS")
+}
+
+Rel(mui, mdata, "uses")
+Rel(mnet, mdata, "wires data")
+Rel(mworker, mdata, "schedules sync")
+Rel(mdata, mlan, "send / listen")
+Rel(mnet, api, "HTTPS REST", "HTTPS")
+Rel(tboot, tserver, "starts")
+Rel(tengine, tserver, "uses")
+Rel(tserver, tlock, "reads / writes saved_lock")
+Rel(mlan, tserver, "InterruptionCommand", "LAN TCP")
+Rel(tengine, mlan, "QuizResultMessage", "LAN TCP")
+
+SHOW_LEGEND()
+@enduml

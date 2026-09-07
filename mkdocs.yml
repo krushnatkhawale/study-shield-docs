@@ -1,0 +1,49 @@
+site_name: StudyShield / Open-School Docs
+site_description: Aggregated documentation for the StudyShield product family (mobile, TV, backend modulith, admin) and the Open-School / private digital school.
+repo_url: https://github.com/
+docs_dir: docs
+theme:
+  name: material
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.expand
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight
+  - toc:
+      permalink: true
+  - tables
+nav:
+  - Home: index.md
+  - Architecture:
+      - Overall system: architecture/system.md
+      - Backend modulith: architecture/backend.md
+      - Mobile & TV apps: architecture/mobile-tv.md
+  - Per-repo guides:
+      - Backend (study-shield-backend): per-repo/backend.md
+      - Mobile & TV (study-shield): per-repo/mobile-tv.md
+      - Open-School: per-repo/open-school.md
+  - Decisions:
+      - Question bank process & rules: decisions/question-bank-guide.md
+      - Decision log (ADR): decisions/adr-log.md
+      - Diagramming standard: decisions/diagramming-standard.md

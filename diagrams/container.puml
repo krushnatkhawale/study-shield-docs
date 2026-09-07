@@ -1,0 +1,25 @@
+@startuml
+!include c4stdlib/C4_Container.puml
+!pragma layout smetana
+title Container diagram (C4 Level 2)
+
+Person(parent, "Parent", "Views results and manages kids on the mobile app")
+Person(kid, "Kid", "Watches TV and plays quizzes during ad breaks")
+
+System_Boundary(ss, "StudyShield / Open-School System") {
+    Container(mobile, "Mobile app", "Android · Kotlin", "Parent-facing. Retrofit HTTPS to the backend; LAN sockets to the TV")
+    Container(tv, "TV app", "Android TV · Kotlin", "Kid-facing. LAN sockets only — has NO HTTP client")
+    Container(api, "Backend", "Spring Boot modulith", "REST over HTTPS. Auth, kids, quiz bundles, POST /questions/load, results, feedback")
+}
+
+ContainerDb(db, "PostgreSQL", "Relational database", "Schemas: content, user_, quiz, tv")
+
+Rel(parent, mobile, "uses", "HTTPS")
+Rel(kid, tv, "watches + plays quizzes", "LAN")
+Rel(mobile, api, "HTTPS REST · auth, kids, quiz bundles, questions, results, feedback", "HTTPS")
+Rel(api, db, "reads and writes rows", "JDBC / HikariCP")
+Rel(mobile, tv, "InterruptionCommand (mobileIp + resultCallbackPort)", "LAN TCP")
+Rel(tv, mobile, "QuizResultMessage → mobileIp:callbackPort", "LAN TCP")
+
+SHOW_LEGEND()
+@enduml
