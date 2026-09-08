@@ -1,7 +1,10 @@
 site_name: StudyShield / Open-School Docs
 site_description: Aggregated documentation for the StudyShield product family (mobile, TV, backend modulith, admin) and the Open-School / private digital school.
-repo_url: https://github.com/
+# SITE_URL is set in CI (GitHub Actions / GitLab Pages). Local default is the dev server.
+site_url: !ENV [SITE_URL, "http://127.0.0.1:8000/"]
+repo_url: https://github.com/krushnatkhawale/study-shield-docs
 docs_dir: docs
+strict: true
 theme:
   name: material
   features:
@@ -35,6 +38,14 @@ markdown_extensions:
   - tables
 nav:
   - Home: index.md
+  - Backlog:
+      - How we use this backlog: backlog/index.md
+      - Experience: backlog/experience.md
+      - Design: backlog/design.md
+      - Business value: backlog/business-value.md
+      - Reliability: backlog/reliability.md
+      - Content: backlog/content.md
+      - Quality and speed: backlog/quality-and-speed.md
   - Architecture:
       - Overall system: architecture/system.md
       - Backend modulith: architecture/backend.md

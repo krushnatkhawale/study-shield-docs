@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Build the static site into ./site/ (deployable to GitHub Pages / Netlify / Render).
+# Build the static site into ./site/ (local/static hosts).
+# GitLab Pages is published from CI (.gitlab-ci.yml) into public/.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

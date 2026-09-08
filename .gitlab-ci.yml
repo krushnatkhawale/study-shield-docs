@@ -1,0 +1,48 @@
+# GitLab Pages: Material for MkDocs → public/
+# Site URL is $CI_PAGES_URL after the first successful pages job.
+# Enable Pages in the GitLab project (Deploy → Pages) if it is not on already.
+
+stages:
+  - test
+  - deploy
+
+default:
+  image: python:3.12-slim
+
+.mkdocs_build:
+  before_script:
+    - pip install --no-cache-dir --upgrade pip
+    - pip install --no-cache-dir -r requirements.txt
+  script:
+    - |
+      if [ -n "${CI_PAGES_URL:-}" ]; then
+        export SITE_URL="${CI_PAGES_URL}/"
+      fi
+    - mkdocs build --strict --site-dir public
+
+# Merge requests and feature branches: prove the site still builds.
+docs:build:
+  extends: .mkdocs_build
+  stage: test
+  artifacts:
+    paths:
+      - public
+    expire_in: 7 days
+    when: on_success
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
+
+# Default branch: publish to GitLab Pages.
+pages:
+  extends: .mkdocs_build
+  stage: deploy
+  pages: true
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  environment:
+    name: pages
+    url: $CI_PAGES_URL

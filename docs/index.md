@@ -27,6 +27,7 @@ The whole system as a single box, seen from the outside: who uses it, and what i
 
 ## Start here
 
+- **Backlog** — [UX stories by role](backlog/index.md) (experience, design, business value, reliability, content, quality and speed)
 - **Architecture** — [overall system](architecture/system.md), [backend modulith](architecture/backend.md), [mobile & TV](architecture/mobile-tv.md)
 - **Per-repo** — [backend](per-repo/backend.md), [mobile & TV](per-repo/mobile-tv.md), [open-school](per-repo/open-school.md)
 - **Decisions** — [question bank process & rules](decisions/question-bank-guide.md), [ADR log](decisions/adr-log.md), [diagramming standard](decisions/diagramming-standard.md)
@@ -35,5 +36,8 @@ The whole system as a single box, seen from the outside: who uses it, and what i
 
 - Built with **MkDocs** (Material theme) from the `docs/` folder here.
 - `./scripts/serve.sh` runs it locally; `./scripts/build.sh` produces static `site/` output
-  deployable to any static host (GitHub Pages, Netlify, Render).
+  deployable to any static host.
+- **GitHub Pages:** `.github/workflows/pages.yml` publishes on push to `main`
+  (origin is `krushnatkhawale/study-shield-docs`).
+- **GitLab Pages:** `.gitlab-ci.yml` builds into `public/` if this project is mirrored there.
 - See the repo `README.md` (at the repo root, outside this rendered site) for setup details.
