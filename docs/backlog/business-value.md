@@ -1,7 +1,6 @@
-# Business value
+# Business value — LLM implementation briefs
 
-What makes a rural family *keep* StudyShield and tell the next house. Ordered
-by impact on activation and trust, not by revenue cleverness.
+Copy **one** story into Buzz. Invariants: [llm-brief.md](llm-brief.md).
 
 ---
 
@@ -10,26 +9,24 @@ by impact on activation and trust, not by revenue cleverness.
 | | |
 |---|---|
 | **Priority** | P1 |
-| **Role** | Product / engineering |
-| **Apps** | `study-shield` mobile, TV, `study-shield-backend` |
-| **Component** | Product metric |
+| **Code status** | **Not in code** |
+| **Work type** | **New** counters. Depends on SS-QLT-05 for a pipeline. Until then, a local log / debug screen is enough. |
+| **Repos** | `study-shield` **mobile** (events); optional `study-shield-backend`. |
 
-**Story:** As the team, we want one number — **minutes from install to first
-TV result** — so we stop shipping side screens that do not move that number.
+**Current behaviour:** No analytics SDK, no funnel.
 
-**Why:** The philosophy is parent-initiated learning instead of ads. If the
-first quiz never happens, there is no product and no conversion.
+**Change to:** Count app_open → child_saved → tv_paired → quiz_started → result_received (app version + language only). Sprint review uses this.
 
-**Acceptance:**
+**Where to change**
 
-- Funnel defined: app open → child saved → TV paired → session started →
-  result on phone. Each step timed (see SS-QLT-05).
-- Sprint review always shows this funnel on the cheap-device pair, not only
-  on the developer phone.
-- A story that does not improve this funnel, kid delight, or trust needs an
-  explicit "why now".
+| Path | Why |
+|------|-----|
+| New `mobile/.../data/ActivationLog.kt` or SS-QLT-05 events | Fire from `MainActivity`, Kid save, `startSession`, result listener |
+| `StudyViewModel.startSession` / `StudyRepository` result callback | quiz_started / result_received |
 
-**Not this:** A vanity dashboard of DAU before activation works.
+**Do not:** Third-party ads SDK. Session replay. Kid names in analytics.
+
+**Verify:** One debug dump of the funnel after a guest first quiz.
 
 ---
 
@@ -38,28 +35,26 @@ first quiz never happens, there is no product and no conversion.
 | | |
 |---|---|
 | **Priority** | P1 |
-| **Role** | Parent |
-| **Apps** | `study-shield` mobile |
-| **Component** | Results |
+| **Code status** | **Not in code** |
+| **Work type** | **New** share on existing results UI. |
+| **Repos** | `study-shield` **mobile**. |
 
-**Story:** As a parent, I want to send "Rohan got 8 out of 10" to the family
-WhatsApp group as a picture, the way I share a school mark, so relatives see
-the product without installing anything yet.
+**Current behaviour:** `SessionResultScreen` / Kid Detail have no `ACTION_SEND`.
 
-**Why:** Rural distribution is social, not store search. WhatsApp is the
-channel. A clean card beats a Play Store link alone.
+**Change to:** After a result, “Send to WhatsApp” image card: mascot, first name, subject, X out of Y, StudyShield. Never auto-share. Neutral/proud copy only.
 
-**Acceptance:**
+**Where to change**
 
-- After a good or OK result, "Send to WhatsApp" is a clear button.
-- Shares an image card: mascot, child's first name, subject, X out of Y,
-  "StudyShield" mark. No phone number, no email, no other child's data.
-- Parent can refuse. Never auto-share.
-- Works with WhatsApp if installed; otherwise system share sheet.
-- Shameful copy is banned ("only 2/10, try harder") — share is for pride or
-  a neutral "practised Math today".
+| Path | Why |
+|------|-----|
+| `mobile/.../ui/SessionResultScreen.kt` | Button + Compose-to-bitmap or simple share text as v1 |
+| `KidDetailScreen.kt` | Optional same action on latest result |
 
-**Not this:** In-app social feed. SMS blasting. Sharing wrong-answer dumps.
+**Implementation pointers:** `Intent.ACTION_SEND` + `setPackage("com.whatsapp")` with fallback to chooser. No extra child PII.
+
+**Do not:** In-app social feed. Sharing wrong-answer dumps.
+
+**Verify:** Share sheet opens; TV unchanged.
 
 ---
 
@@ -68,25 +63,23 @@ channel. A clean card beats a Play Store link alone.
 | | |
 |---|---|
 | **Priority** | P1 |
-| **Role** | Parent |
-| **Apps** | `study-shield` mobile, `study-shield-backend` |
-| **Component** | Select content / pack cards |
+| **Code status** | **Done in code** for bundle metadata. **Enhance copy** on pack cards. |
+| **Work type** | **Enhance** `ContentSelectionScreen` labels. Backend already returns `className`, `boardCode`, `subjects`. |
+| **Repos** | `study-shield` **mobile** (copy). Backend only if you want a display field. |
 
-**Story:** As a parent, I want to see that this is *school work* (Class 3
-Math, CBSE-like), in one line, so I trust the quiz more than a random puzzle
-app.
+**Current behaviour**
 
-**Why:** The bank already follows CBSE/ICSE core on the `ALL` board. That
-trust is invisible in the UI.
+- `QuizBundleResponse`: className, boardCode, subjects.
+- Pack UI subtitle **“Freemium {category}”** (`StudyScreens.kt` ContentSelectionScreen).
+- `ExpUpgradePromptDialog` mentions class & syllabus.
 
-**Acceptance:**
+**Change to:** Cards: “Class 3 · Math” + “School topics”. No official-board claim. Pair with SS-EXP-05 (drop Freemium).
 
-- Pack cards: "Class 3 · Math" plus "School topics" — not "Content pack" or
-  "Freemium bundle".
-- Kid Detail: "Questions match class 3 school topics".
-- No false claim of being the official board paper.
+**Where to change:** `mobile/.../ui/StudyScreens.kt` pack card composable; maybe `StudyContent` display helpers.
 
-**Not this:** Listing every syllabus bullet. A PDF prospectus.
+**Do not:** PDF prospectus. Rebuild catalog.
+
+**Verify:** Select Content shows class + subject in parent language (if SS-EXP-03 done).
 
 ---
 
@@ -95,28 +88,19 @@ trust is invisible in the UI.
 | | |
 |---|---|
 | **Priority** | P1 |
-| **Role** | Parent, Kid |
-| **Apps** | `study-shield` mobile, `study-shield` TV |
-| **Component** | Performance / APK |
+| **Code status** | **Partial** (minSdk already 24/23) |
+| **Work type** | **Enhance** discipline: size budget + don’t add TV HTTP/images unbounded (SS-DSN-02). |
+| **Repos** | `study-shield` **mobile + tv**. Team: SS-QLT-03. |
 
-**Story:** As a family with a 2–3 GB phone and a cheap Android TV stick, I
-want the app to start and run a quiz without heat, ads of our own, or a
-300 MB download.
+**Current behaviour:** `mobile/build.gradle` minSdk 24; `tv/build.gradle` minSdk 23. TV has no Retrofit.
 
-**Why:** The market that needs this product is not a flagship Pixel plus a
-Chromecast. TV must stay a thin APK (no HTTP stack, no image CDN dependency
-required for the first quiz).
+**Change to:** Track TV APK size on PRs (SS-QLT-04). Picture quizzes must not require a 300 MB TV APK. No ads.
 
-**Acceptance:**
+**Where to change:** Gradle `resConfigs`; SS-DSN-02 asset strategy; PR template.
 
-- Target: Android 8+ phone, 2 GB RAM; Android TV / stick 1.5–2 GB.
-- First-quiz path stays usable on 3G/weak Wi-Fi because quiz payload is
-  already on the phone when the session starts (mobile hub).
-- TV APK size budget is tracked on the TV PR checklist (SS-QLT-04).
-- No full-screen ads. This product *replaces* ads.
+**Do not:** Drop old APIs without measuring.
 
-**Not this:** Dropping old API levels without measuring the rural fleet.
-Shipping four densities of huge art on TV.
+**Verify:** `:tv:assembleDebug` size note in the PR.
 
 ---
 
@@ -125,28 +109,28 @@ Shipping four densities of huge art on TV.
 | | |
 |---|---|
 | **Priority** | P2 |
-| **Role** | Parent |
-| **Apps** | `study-shield` mobile, `study-shield-backend` |
-| **Component** | Catalog / paywall |
+| **Code status** | **Partial — cap exists, paywall does not** |
+| **Work type** | **New** paywall **on mobile only** after existing 2-quiz cap. Do not confuse with Trial class-upgrade dialog. |
+| **Repos** | `study-shield` **mobile** + `study-shield-backend` entitlements if you persist “unlocked”. |
 
-**Story:** As a parent who has already seen my child finish a quiz, I want a
-simple offer for more quizzes in my language, without a wall before the
-first success.
+**Current behaviour**
 
-**Why:** ADR already right-sized freemium to 2 quizzes per class. Conversion
-should happen at delight, not at the door.
+- `QUIZZES_PER_CLASS = 2`, `ContentTier.FREEMIUM`.
+- `ExpUpgradePromptDialog`: after first **Trial** quiz, ask to **update class** — not pay.
 
-**Acceptance:**
+**Change to:** First two class quizzes always play. Then one mobile sentence “More class 4 quizzes”. Never on TV. Guest results still count.
 
-- First two class quizzes always play (existing `QUIZZES_PER_CLASS = 2`).
-- After that: one screen, one sentence: "More class 4 quizzes" + price or
-  "ask us". No English legal essay.
-- Paywall never appears on the TV. The kid is not the customer.
-- Guest results still count so the parent is not forced to register in
-  order to be allowed to pay later.
+**Where to change**
 
-**Not this:** Per-question microtransactions. Ads on wrong answers. Dark
-patterns that look like Start quiz.
+| Path | Why |
+|------|-----|
+| `QuizBundleService` / ContentTier | Premium selection when entitled |
+| Mobile Select Content empty/locked state | Copy |
+| Keep `ExpUpgradePromptDialog` for Trial→real class | Different job |
+
+**Do not:** Ads on wrong answers. TV paywall. Per-question IAP.
+
+**Verify:** Third pack for a class blocked on phone; TV never shows a pay UI.
 
 ---
 
@@ -155,25 +139,12 @@ patterns that look like Start quiz.
 | | |
 |---|---|
 | **Priority** | P2 |
-| **Role** | Parent, operator |
-| **Apps** | `study-shield` mobile, `study-shield` TV |
-| **Component** | Distribution |
+| **Code status** | **Not in code** |
+| **Work type** | **New** docs + version labels. Apps already have versionName. |
+| **Repos** | `study-shield-docs` (guide); `study-shield` mobile/tv first screens for “Phone app” vs “TV app”. |
 
-**Story:** As a parent whose Play Store is slow, full, or missing, I want a
-trusted way to get the phone app and the TV app (WhatsApp file, shop
-sideload, USB), with a version number I can read.
+**Change to:** Picture guide (Hindi/English): install phone APK, TV APK from USB/Play, same Wi-Fi. Distinct launcher labels.
 
-**Why:** Rural install is often "cousin sent the APK". Document and support
-that path so we do not pretend only Play exists.
+**Where to change:** This docs site; `mobile/.../res/values/strings.xml` `app_name`; TV `app_name` (still “Interrupter” — SS-EXP-05).
 
-**Acceptance:**
-
-- Version and "this is the phone app" / "this is the TV app" are visible on
-  the first screen (icons differ strongly).
-- A one-page install picture-guide lives in this docs site (Hindi/English):
-  phone APK, TV APK from USB/Play, same Wi-Fi.
-- Signing/versioning is stable enough that WhatsApp-shared APKs update
-  without "Uninstall first?" where we can avoid it.
-
-**Not this:** A custom app store. Encouraging unknown-source installs
-without a short warning.
+**Verify:** Someone can tell the two APKs apart from the icon/name.

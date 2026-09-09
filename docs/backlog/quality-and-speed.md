@@ -1,8 +1,6 @@
-# Quality and speed
+# Quality and speed — LLM implementation briefs
 
-How this agile team protects the parent/kid experience without slowing
-delivery. These are stories — they get sprint slots — not wallpaper
-principles.
+Copy **one** story into Buzz. Practice cards are working agreements, not app features.
 
 ---
 
@@ -11,28 +9,38 @@ principles.
 | | |
 |---|---|
 | **Priority** | P0 |
-| **Role** | Engineering |
-| **Apps** | `study-shield` mobile, `study-shield` TV |
-| **Component** | `InterruptionCommand` / `QuizResultMessage` |
+| **Code status** | **Not in code** |
+| **Work type** | **New** contract test (or shared module). **Enhance** the duplicated types — do not invent a third JSON dialect. |
+| **Repos** | `study-shield` **mobile + tv** (same Gradle project). |
 
-**Story:** As a developer changing a quiz field, I want a single contract
-that both apps must satisfy, so we never again ship a TV that drops
-`kidName` or a new greeting locale.
+**Current behaviour**
 
-**Why:** Architecture rule: both apps keep their own copies. That is a
-loaded footgun. Speed comes from *generating or testing* the contract, not
-from more wiki text.
+- `InterruptionCommand` / `QuizResultMessage` / `TtsCapabilitiesMessage` duplicated:
+  - `mobile/src/main/java/com/kaushalya/interrupter/data/Models.kt`
+  - `tv/src/main/java/com/kaushalya/interrupter/InterruptionCommand.kt`
+- TV `QuizQuestion` has **no** `id`; mobile’s does.
+- Tests: no round-trip. Docs say “update both”.
 
-**Acceptance:**
+**Change to**
 
-- One canonical JSON schema (or codegen from one Kotlin module) for
-  command + result + TTS cap-check.
-- CI on `study-shield` fails if mobile and TV models diverge.
-- Adding a field is one PR that updates both sides plus a golden fixture
-  used in a round-trip unit test.
-- Screen-flow docs mention the field only after the contract exists.
+CI fails if the two models diverge. Adding a field is one PR: both copies + golden JSON fixture.
 
-**Not this:** "Remember to update both" in a PR template with no test.
+**Where to change**
+
+| Path | Why |
+|------|-----|
+| Preferred: `study-shield` shared JVM module used by mobile + tv | Single source |
+| Or: `mobile/src/test` + `tv/src/test` that parse the **same** `fixtures/command.json` | Fastest |
+| `TvServerService` / `StudyRepository` | Serialize with kotlinx.serialization as today |
+
+**Implementation pointers**
+
+- Existing pattern: kotlinx `@Serializable` on both. Fixture should include `kidName`, `revealReadLock`, `autoDictation`, `fastAnswerThresholdMs`, `greetingLanguage`, `avatarId`, `mobileIp`, `resultCallbackPort`.
+- `TTS_CAP_CHECK` must never be persisted as a lock.
+
+**Do not:** “Remember to update both” as the only control.
+
+**Verify:** `./gradlew :mobile:test :tv:test` (or shared module test). Change one field, confirm the test fails until both match.
 
 ---
 
@@ -41,36 +49,13 @@ from more wiki text.
 | | |
 |---|---|
 | **Priority** | P0 |
-| **Role** | Whole team |
-| **Apps** | Any user-facing change |
-| **Component** | Team working agreement |
+| **Code status** | **Practice** |
+| **Work type** | Team agreement. Optional: add a short checklist file in `study-shield/.github/` or this docs repo. |
+| **Repos** | Process; optional `study-shield` PR template (also SS-QLT-04). |
 
-**Story:** As a team, we want a story to be Done only when a person who is
-not us can start or understand the quiz without coaching, so we stop
-shipping developer-complete work.
+**Change to:** Ready/Done as on the original card (hallway test, no TV HTTP, jargon ban, cheap device demo).
 
-**Acceptance:**
-
-Definition of Ready:
-
-- Role, app(s), and "not this" (especially TV thinness) are filled.
-- First-quiz path impact is stated (helps / no change / risks).
-- Copy is drafted in Hindi or Marathi *or* explicitly English-only with
-  reason.
-
-Definition of Done:
-
-- [ ] Demoed on a phone, not only an emulator, for mobile stories.
-- [ ] Demoed on the living-room TV / stick for TV stories.
-- [ ] No banned jargon in parent-visible strings (SS-EXP-05).
-- [ ] TV gained no menu, account, or HTTP client.
-- [ ] Result still attributed to the correct kid (SS-REL-01 smoke).
-- [ ] 5-minute hallway test: one non-author follows the happy path from
-  the UI alone. If they stall, it is not Done.
-
-Sprint ritual: that hallway test is the demo, on the cheap device pair.
-
-**Not this:** A 12-page process. QA as a separate phase after "dev done".
+**Do not:** A 12-page process. QA-only “dev done”.
 
 ---
 
@@ -79,28 +64,15 @@ Sprint ritual: that hallway test is the demo, on the cheap device pair.
 | | |
 |---|---|
 | **Priority** | P1 |
-| **Role** | Engineering / QA |
-| **Apps** | `study-shield` mobile, TV |
-| **Component** | Device lab |
+| **Code status** | **Practice** |
+| **Work type** | Process + optional CI jobs on `study-shield` / `study-shield-backend`. |
+| **Repos** | All product repos’ CI; not a user-facing feature. |
 
-**Story:** As a tester, I want the default proof device to be a low-RAM
-Android phone and a cheap Android TV stick on a domestic router, so
-flagship-only bugs do not escape.
+**Current behaviour:** Local Gradle. Docs GitHub Actions for this **docs** site only.
 
-**Acceptance:**
+**Change to:** Named cheap devices; per-sprint physical pairing; `quiz-bundles` timing vs remote DB (SS-REL-02).
 
-- Named devices in the team room (or a cloud farm job): one Android 8–10
-  phone, one Android TV stick.
-- PR checks: at least unit/Robolectric + assembleDebug for `:mobile` and
-  `:tv`; backend `:ss-modulith:test` + regression features that cover
-  bundle + feedback.
-- Once per sprint: physical pairing test (SS-EXP-02) recorded as a
-  checklist, not a screenshot of the emulator.
-- Backend first-bundle timing (SS-REL-02) measured against a remote DB,
-  not only H2.
-
-**Not this:** Waiting for a perfect device farm before manual cheap-device
-testing.
+**Verify:** Sprint note names the device pair.
 
 ---
 
@@ -109,28 +81,17 @@ testing.
 | | |
 |---|---|
 | **Priority** | P1 |
-| **Role** | Engineering |
-| **Apps** | `study-shield` TV |
-| **Component** | Pull request template |
+| **Code status** | **Not in code** |
+| **Work type** | **New** file in the Android repo. |
+| **Repos** | **`study-shield`** `.github/pull_request_template.md` (or `PULL_REQUEST_TEMPLATE.md`). |
 
-**Story:** As a reviewer, I want a short TV checklist so "just one more
-screen" cannot land.
+**Change to:** Checklist: no kid menu, no HTTP on TV, D-pad+OK, no kid Exit, APK size delta, both protocol copies, TTS English fallback.
 
-**Acceptance:**
+**Where to change:** `/Users/hulk/.buzz/REPOS/study-shield/.github/pull_request_template.md`
 
-TV PR template:
+**Do not:** Same checklist on backend-only PRs (use a TV-path note: “skip if mobile-only”).
 
-- [ ] No new Activity/menu the kid can open
-- [ ] No HTTP/Retrofit on TV
-- [ ] Remote: D-pad + OK only for the new UI
-- [ ] Session still ends without a kid-operated Exit
-- [ ] APK size delta noted
-- [ ] Command/result schema updated both sides (SS-QLT-01)
-- [ ] Greeting/TTS fallback still English if locale missing
-
-A reviewer may reject a TV PR that is "complete" but thick.
-
-**Not this:** The same checklist on backend-only PRs.
+**Verify:** Open a dummy PR description locally.
 
 ---
 
@@ -139,25 +100,15 @@ A reviewer may reject a TV PR that is "complete" but thick.
 | | |
 |---|---|
 | **Priority** | P2 |
-| **Role** | Product |
-| **Apps** | `study-shield` mobile, `study-shield-backend` |
-| **Component** | Analytics |
+| **Code status** | **Not in code** |
+| **Work type** | **New**. Implement SS-BIZ-01 events without extra child PII. |
+| **Repos** | `study-shield` mobile; optional `study-shield-backend` ingest. |
 
-**Story:** As the team, we want counts of the first-quiz funnel without
-storing extra child data, so we can see rural activation fail without
-reading people's names.
+**Change to:** Counters only. One parent-language paragraph in Settings. DPDP-minded.
 
-**Acceptance:**
+**Do not:** Ad SDKs. Question text in events.
 
-- Events: app_open, child_saved, tv_paired, quiz_started, result_received,
-  share_tapped — counters only, with app version and language.
-- No question text, no raw scores tied to a name in analytics. Kid names
-  stay in the product DB under existing auth.
-- DPDP-minded: document what is collected in one parent-language paragraph
-  in Settings.
-- Funnel shown in sprint review (SS-BIZ-01).
-
-**Not this:** Third-party ad SDKs. Session replay of the living room.
+**Verify:** Logcat/event dump has no kid name.
 
 ---
 
@@ -166,43 +117,24 @@ reading people's names.
 | | |
 |---|---|
 | **Priority** | P2 |
-| **Role** | Whole team |
-| **Apps** | All |
-| **Component** | Agile cadence |
+| **Code status** | **Practice** |
+| **Work type** | Cadence. When a story spans mobile + TV + backend, **one PR stack or flag** so `main` stays demoable. |
 
-**Story:** As a team, we want a weekly demo that is always a child on a
-real TV plus a parent on a real phone, so unfinished "platform work"
-cannot hide.
+**Change to:** Weekly demo is always a real TV + real phone. Retro: “Would a parent in Satara finish this without us?”
 
-**Acceptance:**
-
-- Cadence: weekly increment, stories sliced to one visible outcome
-  (this backlog's story grain).
-- Stand-up names blockers in pairing, bundle latency, and copy — not
-  only tickets.
-- Backend, mobile, and TV changes for one outcome travel together (or
-  feature-flagged) so main is always demoable.
-- Docs site (this repo) updates in the same slice when IA or flows
-  change.
-- Retro every 2 weeks asks: "Would a parent in Satara finish this
-  without us?"
-
-**Not this:** Two-month "UX redesign" branches. Separate mobile and TV
-sprints that meet at the end.
+**Do not:** Two-month UX branches. Separate mobile/TV sprints that meet at the end.
 
 ---
 
-## Working habits (do not ticket separately — just do them)
+## Working habits (do not ticket separately)
 
-| Habit | Why it is here |
-|-------|----------------|
-| **Trunk-based, small PRs** | Dual-app protocol rot happens on long branches. |
-| **Feature flags on mobile, not TV** | TV stays a renderer of the last command. |
-| **Contract tests > UI tests for sockets** | LAN flake is real; JSON shape is not. |
-| **Keep `QuestionBankContentTest` green** | Content quality is a unit-test problem. |
-| **Regression suite** (`ss-regression-suite`) | Protect bundle, auth, feedback; update when seeding flags change. |
-| **One writer for parent copy** | Mixed English/Hindi by five developers will read as broken. |
-| **No new TV capability without a mobile control** | Parent initiates; kid plays. |
-| **Hallway test in Hindi** | English-only Done is a lie for this product. |
-| **Build TV and mobile in the same CI pipeline** | A green mobile with a red TV is not green. |
-| **Pages site builds on every docs change** | This backlog is useless if the team cannot open it. |
+| Habit | Why |
+|-------|-----|
+| Small PRs / trunk | Dual-app protocol rot on long branches |
+| Feature flags on **mobile**, not TV | TV renders the last command |
+| Contract tests > flaky LAN UI tests | SS-QLT-01 |
+| Keep `QuestionBankContentTest` green | Content quality |
+| Update `ss-regression-suite` when seeding flags change | SS-REL-02 |
+| One writer for parent copy | SS-EXP-05 / SS-EXP-03 |
+| No new TV capability without a mobile control | Architecture |
+| Build `:mobile` and `:tv` in the same CI | A green mobile + red TV is not green |

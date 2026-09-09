@@ -1,7 +1,6 @@
-# Content
+# Content — LLM implementation briefs
 
-What appears on the TV. Kids stay if questions feel like play; parents stay
-if questions feel like school.
+Copy **one** story into Buzz. Bank rules: [question-bank guide](../decisions/question-bank-guide.md). Tests: `QuestionBankContentTest`.
 
 ---
 
@@ -10,27 +9,39 @@ if questions feel like school.
 | | |
 |---|---|
 | **Priority** | P0 |
-| **Role** | Kid |
-| **Apps** | `study-shield` TV, `study-shield-backend` |
-| **Component** | Quiz composition / FITB |
+| **Code status** | **Partial — enhance length + hide FITB for young grades** |
+| **Work type** | **Enhance** `QUESTIONS_PER_QUIZ` / bundle composition. **Enhance** mobile Library so FITB is not a default kid path. |
+| **Repos** | `study-shield-backend` (length); `study-shield` mobile (Library modes) + tv (`FitbUI` may remain for manual/dev). |
 
-**Story:** As a young child, I want a short game (about five questions) I
-can finish with the remote, so I am not asked to type on the TV.
+**Current behaviour**
 
-**Why:** FITB exists in the TV state map. For Nursery–Class 2 it is
-overkill and breaks "thin and interesting". Long quizzes feel like tuition.
+- `QuizBundleSeeder.QUESTIONS_PER_QUIZ = 10` for **all** classes.
+- Curated bank: MCQ or True/False only (`QuestionBankContentTest` forbids FITB).
+- Mobile Library mode list includes **Fill In The Blank** → TV `FitbUI` letter grid.
+- `QuizLoader` drops questions with empty options (API FITB would not show in packs).
 
-**Acceptance:**
+**Change to**
 
-- Default length: 5 questions for Nursery–UKG, 8 for Class 1–5, 10 max for
-  6–10. Parent can request more later, not on first run.
-- FITB is **not** sent for Nursery–Class 2. True/False and 4-choice only.
-- Session time target: under ~3 minutes for KG including greeting and
-  4-second celebration.
-- Question text for KG is short enough to speak in one TTS breath.
+Default length: **5** Nursery–UKG, **8** class 1–5, **10** max class 6–10. Do not send FITB for Nursery–class 2. Library should not offer FITB as a parent-facing kid quiz (keep MCQ / study session).
 
-**Not this:** Adaptive 30-question tests. On-screen keyboard as a skill
-game.
+**Where to change**
+
+| Path | Why |
+|------|-----|
+| `ss-modulith/.../QuizBundleSeeder.java` | Per-band question count |
+| `ss-modulith/.../QuizBundleService.java` | Slice quizzes when issuing |
+| `QuestionBankContentTest` | Don’t require 10 on screen if you still author ≥10 in the bank (keep authorship volume; **serve** fewer) |
+| `mobile/.../ui/StudyScreens.kt` `ControlScreen` `modes` | Hide FITB from parent kid path |
+| `tv/.../MainActivity.kt` `FitbUI` | Leave for compat; don’t use in `startSession` packs |
+
+**Implementation pointers**
+
+- Serving 5 of 10 authored questions is better than shrinking the bank below test minimums — or split tests: authored ≥10, delivered 5.
+- `StudyViewModel.startSession` uses pack questions from `QuizLoader` — trim there **or** in seeder, not on TV.
+
+**Do not:** On-screen keyboard as a “skill game” for KG.
+
+**Verify:** `:ss-modulith:test`. Nursery pack on TV has ~5 MCQ/TF, no FITB.
 
 ---
 
@@ -39,26 +50,33 @@ game.
 | | |
 |---|---|
 | **Priority** | P1 |
-| **Role** | Parent, Operator, Content author |
-| **Apps** | `study-shield` mobile, `study-shield-backend`, `study-shield-backend-admin` |
-| **Component** | Feedback module / admin inbox |
+| **Code status** | **Partial — enhance admin; API already exists** |
+| **Work type** | **Enhance** Vaadin admin with a **feedback inbox**. Reuse blacklist. Do not rebuild mobile 👍👎🚩. |
+| **Repos** | **`study-shield-backend-admin`** primary; maybe list endpoint on **`study-shield-backend`**. Mobile already posts feedback. |
 
-**Story:** As a parent who tapped 👎 or 🚩 because the answer was wrong, I
-want that to actually get fixed, and as an operator I want a simple inbox
-instead of reading database rows.
+**Current behaviour**
 
-**Why:** Feedback APIs already exist. Without an admin loop, parents learn
-that reporting is theatre. Wrong answers destroy school-trust (SS-BIZ-03).
+- Mobile `QuizReviewScreen` → `FeedbackRepository` → `PUT /api/v1/questions/{id}/feedback`.
+- Backend `QuestionFeedbackController` upsert per `(account_id, question_id)`.
+- Admin `QuestionEditorDialog` has **Blacklisted**; bundles skip `blacklisted` questions.
+- **No** admin view of feedback. `SettingsView` collection list omits `question-feedback`.
 
-**Acceptance:**
+**Change to**
 
-- Admin home: list of recent downvotes/reports with question text, grade,
-  subject, count.
-- Operator can hide a question from new bundles without a deploy.
-- Parent does not need a ticket number; "Thanks — we will check" is enough.
-- Duplicate reports on the same question collapse.
+Admin home/inbox: recent downvotes/reports, question text, grade, subject, count. Operator can blacklist without a deploy. Parent still just sees “Thanks”.
 
-**Not this:** Public comment threads. Voting on the TV.
+**Where to change**
+
+| Path | Why |
+|------|-----|
+| `study-shield-backend/.../feedback/` | Add `GET` list-all for ADMIN if missing |
+| `study-shield-backend-admin/.../ui/` new `FeedbackInboxView` | Grid + blacklist action |
+| `MainLayout.java` | Nav link |
+| `BackendDataService.java` | Client for the new list |
+
+**Do not:** Public comments. Voting on TV. Auto-delete questions on one downvote without a human.
+
+**Verify:** Downvote from mobile; row appears in admin; blacklist; new bundle omits it.
 
 ---
 
@@ -67,28 +85,34 @@ that reporting is theatre. Wrong answers destroy school-trust (SS-BIZ-03).
 | | |
 |---|---|
 | **Priority** | P1 |
-| **Role** | Kid, Parent |
-| **Apps** | `study-shield-backend`, `study-shield` TV, `study-shield` mobile |
-| **Component** | Question bank |
+| **Code status** | **Not in code** (documented as D3 / later) |
+| **Work type** | **New** bank content + TTS already supports `hi-IN`. |
+| **Repos** | **`study-shield-backend`** bank; **`study-shield` tv** font check; mobile review display. |
 
-**Story:** As a family using the Hindi subject, I want questions in Devanagari
-(and spoken Hindi), not English sentences labelled "Hindi".
+**Current behaviour**
 
-**Why:** The question-bank guide already flags this: GK was renamed Hindi
-but still English text. Rural parents will notice immediately.
+- `QuestionBankContent` header: Hindi = English text, India topics. Nursery Hindi is traffic lights / peacock in English.
+- Loader sets quiz language `"English"`.
+- TV greeting can already speak `hi-IN` (`CompletionMessages`, `configureKidTts`).
 
-**Acceptance:**
+**Change to**
 
-- Hindi-subject items for Nursery–Class 5 are Devanagari; TTS locale `hi-IN`
-  when auto-dictation is on.
-- TV fonts render Hindi (and Marathi) without tofu boxes on the cheap stick
-  we test.
-- English subject stays English. Do not mix scripts in one question unless
-  the item is explicitly "match the word".
-- `QuestionBankContentTest` gains a script check for the Hindi subject.
+Hindi-subject items Nursery–class 5 in Devanagari. Auto-dictation uses `hi-IN` for that subject (or kid greeting language — pick one rule and document it). No tofu boxes on the cheap TV stick.
 
-**Not this:** Translating Math word problems in the same sprint unless
-needed for KG.
+**Where to change**
+
+| Path | Why |
+|------|-----|
+| `ss-modulith/.../content/seed/QuestionBankContent.java` | Replace Hindi lists |
+| `QuestionBankContentTest` | Optional script assertion |
+| `question-bank.json` | Regenerate from bank |
+| `QuestionBankLoader` | Don’t force English on Hindi subject |
+| TV quiz `Text` | Confirm Noto/system Hindi |
+| `TrialContentDownloader.kt` | Trial Hindi items if seeded from mobile |
+
+**Do not:** Translating Math word problems in the same PR unless required.
+
+**Verify:** `:ss-modulith:test`. TV shows Devanagari; TTS speaks Hindi when dictation on.
 
 ---
 
@@ -97,22 +121,23 @@ needed for KG.
 | | |
 |---|---|
 | **Priority** | P2 |
-| **Role** | Kid |
-| **Apps** | `study-shield-backend` |
-| **Component** | Question bank |
+| **Code status** | **Partial — enhance EVS strings in the bank** |
+| **Work type** | **Enhance** `QuestionBankContent` EVS lists. No app UI. |
+| **Repos** | **`study-shield-backend`** only (regenerate `question-bank.json`). |
 
-**Story:** As a child in a town or village, I want EVS questions about
-things I know (wells, markets, festivals, crops, buses) so the quiz feels
-mine, not a city textbook photocopy.
+**Current behaviour**
 
-**Acceptance:**
+EVS is generic science; stronger India items live under **Hindi** (Diwali, ₹, police 100).
 
-- Each EVS band includes a share of India-local, non-metro examples.
-- Still age-right and non-political; authorship rules still apply
-  (no placeholders, no duplicates).
-- Pictures preferred for Nursery EVS (SS-DSN-02).
+**Change to**
 
-**Not this:** Region-specific forks per state in v1.
+Each EVS band includes village/town life (market, bus, well, festivals) still age-right. Authorship rules still apply (volume, no placeholders, no dupes).
+
+**Where to change:** `QuestionBankContent.java` EVS maps; `QuestionBankContentTest`; regenerate JSON.
+
+**Do not:** Per-state forks in v1.
+
+**Verify:** `:ss-modulith:test`. Spot-check Nursery EVS.
 
 ---
 
@@ -121,25 +146,30 @@ mine, not a city textbook photocopy.
 | | |
 |---|---|
 | **Priority** | P2 |
-| **Role** | Operator / content author |
-| **Apps** | `study-shield-backend-admin`, `study-shield-backend` |
-| **Component** | Admin console |
+| **Code status** | **Partial — enhance admin; load API exists** |
+| **Work type** | **Enhance** Vaadin: button that calls existing `POST /api/v1/questions/load`. |
+| **Repos** | **`study-shield-backend-admin`**. Backend endpoint already implemented. |
 
-**Story:** As an operator, I want to load or refresh `question-bank.json`
-and toggle catalog seeding from the Vaadin admin, so content ops do not
-require curl and Render logs.
+**Current behaviour**
 
-**Why:** Admin today is local H2 config (JWT, seeding flags) with default
-`admin/admin123`. Real ops still live in the API. UX for families depends
-on content actually being present.
+- Load: `POST /api/v1/questions/load` (curl `question-bank.json`).
+- Admin: question CRUD, JSON table browser. `BackendDataService` has no `questions/load`.
+- `ApplicationSettings.catalogSeedingEnabled` in admin H2 is **not** the backend flag.
+- README `admin/admin123` is **stale** — login is `POST /api/auth/admin-signin`.
 
-**Acceptance:**
+**Change to**
 
-- Authenticated admin can trigger `questions/load` against the real backend
-  (or upload the JSON) and see counts per class/subject.
-- Catalog seeding flag is the same flag the backend already has — no second
-  source of truth.
-- Default passwords are not used in any shared environment.
+Authenticated admin uploads/triggers load and sees counts per class/subject. Seeding toggle must write the **backend** config or be removed from admin H2 so there is one source of truth.
 
-**Not this:** Turning admin into a full CMS in the first pass. Letting the
-TV pull the bank.
+**Where to change**
+
+| Path | Why |
+|------|-----|
+| `admin/.../BackendDataService.java` | `post("/api/v1/questions/load", body)` |
+| New view or `DashboardView` | File upload / “Load bank” |
+| `MainLayout.java` | Link |
+| `study-shield-backend-admin/README.md` | Fix credentials |
+
+**Do not:** Full CMS rewrite. TV pulling the bank.
+
+**Verify:** Admin login against backend; load JSON; dashboard question count rises.

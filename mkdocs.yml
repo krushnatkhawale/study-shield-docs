@@ -40,6 +40,8 @@ nav:
   - Home: index.md
   - Backlog:
       - How we use this backlog: backlog/index.md
+      - Feed a story to Buzz: backlog/llm-brief.md
+      - Code audit (implemented vs not): backlog/code-audit.md
       - Experience: backlog/experience.md
       - Design: backlog/design.md
       - Business value: backlog/business-value.md

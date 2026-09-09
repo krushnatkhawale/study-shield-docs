@@ -27,7 +27,7 @@ The whole system as a single box, seen from the outside: who uses it, and what i
 
 ## Start here
 
-- **Backlog** — [UX stories by role](backlog/index.md) (experience, design, business value, reliability, content, quality and speed)
+- **Backlog** — [paste-ready stories](backlog/index.md) · [how to feed Buzz](backlog/llm-brief.md) · [code audit](backlog/code-audit.md)
 - **Architecture** — [overall system](architecture/system.md), [backend modulith](architecture/backend.md), [mobile & TV](architecture/mobile-tv.md)
 - **Per-repo** — [backend](per-repo/backend.md), [mobile & TV](per-repo/mobile-tv.md), [open-school](per-repo/open-school.md)
 - **Decisions** — [question bank process & rules](decisions/question-bank-guide.md), [ADR log](decisions/adr-log.md), [diagramming standard](decisions/diagramming-standard.md)

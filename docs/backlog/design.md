@@ -1,7 +1,6 @@
-# Design
+# Design — LLM implementation briefs
 
-Visual and interaction design that makes the TV *kid-interesting* and the
-mobile *parent-obvious*. TV work is intentionally small.
+Copy **one** story into Buzz. Invariants: [llm-brief.md](llm-brief.md). TV stays 10-foot and thin.
 
 ---
 
@@ -10,34 +9,36 @@ mobile *parent-obvious*. TV work is intentionally small.
 | | |
 |---|---|
 | **Priority** | P0 |
-| **Role** | Kid |
-| **Apps** | `study-shield` TV |
-| **Component** | Quiz UI (`QuizUI` / `TrueFalseUI`) |
+| **Code status** | **Partial — enhance `QuizUI` / `QuizSession`** |
+| **Work type** | **Enhance** existing 2×2 tiles. Do not rebuild the quiz engine. |
+| **Repos** | `study-shield` **tv**. Manual FITB mode on mobile Library is out of scope except hiding it (SS-EXP-05 / SS-CNT-01). |
 
-**Story:** As a child sitting across the room, I want each question to be one
-big prompt and up to four huge answers I can hit with the remote, so I never
-search the screen.
+**Current behaviour**
 
-**Why:** 10-foot UI. Kids miss small focus rings. Extra chrome (progress
-math, pack names, IP, timers in the corner) makes the quiz feel like a test
-and a settings panel.
+- `QuizUI` in `tv/.../MainActivity.kt`: 2×2 `Button`s, height 100.dp, focus scale 1.08, D-pad, read-lock hint.
+- `TrueFalseUI` for two options.
+- `QuizSession` shows progress **bar + “Question N of M”**, pause control, optional `ExitConfirmOverlay`.
+- `FitbUI`: on-screen letter grid (overkill for young kids).
 
-**Acceptance:**
+**Change to**
 
-- Answer tiles fill most of the screen; focus scale/glow is obvious from 3
-  metres on a 32" set.
-- True/False is two giant tiles, not four empty slots.
-- No nav bar, no hamburger, no "skip", no question counter as the hero
-  (a quiet 3/5 dots is enough).
-- One question per screen. No scrolling.
-- D-pad: left/right or up/down among answers; OK to confirm. No long-press
-  gestures.
-- Wrong/right feedback is instant (colour + sound + mascot beat) then the
-  next question. Do not require reading an explanation to continue (optional
-  short TTS is OK).
+Question + up to four huge answers from 3 metres. Quiet dots instead of “Question N of M” as hero. No skip. FITB not used for bank quizzes (SS-CNT-01). Pause/exit: see SS-EXP-10.
 
-**Not this:** FITB keyboards for under-8s (see SS-CNT-01). Leaderboards.
-Picture-in-picture video players.
+**Where to change**
+
+| Path | Why |
+|------|-----|
+| `tv/.../MainActivity.kt` `QuizUI`, `TrueFalseUI`, `QuizSession` | Layout, progress, chrome |
+| `tv/docs/TV_QUIZ_DESIGN_DECISIONS.md` | Keep in sync |
+
+**Implementation pointers**
+
+- Questions arrive as `InterruptionCommand.questions` (`QuizQuestion(question, options, answer)`). No images until SS-DSN-02.
+- Focus: keep `focusedContainerColor` + scale; colour-only is not enough.
+
+**Do not:** New Activities. HTTP. Leaderboards.
+
+**Verify:** `:tv:assembleDebug`. D-pad through 4 options on a TV/emulator.
 
 ---
 
@@ -46,32 +47,41 @@ Picture-in-picture video players.
 | | |
 |---|---|
 | **Priority** | P0 |
-| **Role** | Kid (3–6), Parent |
-| **Apps** | `study-shield` TV, `study-shield` mobile, `study-shield-backend` |
-| **Component** | Question payload / TV render / bank |
+| **Code status** | **Not in code** (TTS toggle exists; images do not render; dictation defaults **off**) |
+| **Work type** | **New** image fields on the protocol + bank items. **Enhance** `autoDictation` default for young grades. |
+| **Repos** | `study-shield` **mobile + tv**; `study-shield-backend` (bank + question JSON). |
 
-**Story:** As a child who cannot read yet, I want to *see* the question and
-*hear* it, and tap a picture, so the quiz feels like a cartoon game.
+**Current behaviour**
 
-**Why:** The bank is still text-shaped (`SeedQuestion`). Quiz-design already
-allows `questionImageUrl` and image options. Without pictures, Nursery is a
-reading test. TTS (already shipped) covers hearing; pictures cover meaning.
+- TV `QuizQuestion`: `question`, `options`, `answer` — **no image**.
+- Mobile `Models.kt` has unused `imageUrl` on a different DTO.
+- `KidQuizConfig.autoDictation = false`.
+- Bank `SeedQuestion` is text-only; `QuestionBankContent` Nursery is MCQ/TF English text.
 
-**Acceptance:**
+**Change to**
 
-- Nursery / LKG / UKG items can ship with a question image and image options
-  (all options images, or all text — no mix, per existing quiz-schema).
-- TV renders image options as the same huge tiles as text.
-- Auto-dictation default **on** for Nursery/LKG/UKG unless the parent turns
-  it off on Kid Detail.
-- If an image fails to load, the spoken question + coloured shapes still
-  work; never a broken-image icon as the only content.
-- Mobile review shows the same pictures so the parent can see what the child
-  saw.
+Nursery / LKG / UKG can show a question image and image options (all images or all text, never mixed — `study-shield/quiz-schema.md`). Auto-dictation **on by default** for those grades unless parent turns it off on Kid Detail.
 
-**Not this:** A full illustrated storybook engine on the TV. Downloading
-image packs through the TV. AI-generated mascots as architecture diagrams
-(already rejected).
+**Where to change**
+
+| Path | Why |
+|------|-----|
+| `mobile/.../data/Models.kt` **and** `tv/.../InterruptionCommand.kt` | Add optional image URLs/base64 to `QuizQuestion` **on both** |
+| `tv/.../TvServerService.kt` + `MainActivity.handleIntent` | Forward extras / JSON |
+| `tv/.../MainActivity.kt` `QuizUI` | Render image tiles same size as text tiles |
+| `mobile/.../ui/StudyViewModel.kt` | Map loader questions → command |
+| `mobile/.../data/QuizLoader.kt` | Pass images through |
+| `study-shield-backend/.../content/entity` + `QuestionBankContent` / load DTO | Author picture items or URLs |
+| `KidQuizConfig` / `KidForm` grade | Default `autoDictation=true` for Nursery/LKG/UKG |
+
+**Implementation pointers**
+
+- TV still **must not** download from the internet if we can avoid it: prefer images **already on the phone** (pack cache) sent in the command (bounded size) or as `file://` is impossible across devices — so **embed small assets in the command JSON** or ship a tiny drawable set in the **TV APK** keyed by resource id. Prefer **resource ids / bundled drawables in both APKs** over TV HTTP.
+- TTS: existing `LaunchedEffect(currentIndex, autoDictation, …)` in `QuizSession` — only change the default.
+
+**Do not:** TV Retrofit. AI-generated architecture diagrams. Mixing text and image options in one question.
+
+**Verify:** Young-grade quiz: spoken question, picture options, parent can disable TTS on Kid Detail.
 
 ---
 
@@ -80,27 +90,29 @@ image packs through the TV. AI-generated mascots as architecture diagrams
 | | |
 |---|---|
 | **Priority** | P1 |
-| **Role** | Parent |
-| **Apps** | `study-shield` mobile |
-| **Component** | Navigation |
+| **Code status** | **Not in code** |
+| **Work type** | **Enhance** `MainScreen` drawer list. Pair with SS-EXP-01. |
+| **Repos** | `study-shield` **mobile**. |
 
-**Story:** As a new parent, I want a single column of big tasks, not a drawer
-of nine destinations, so I cannot get lost in Connected TVs vs Library vs
-Quiz Setup vs Settings.
+**Current behaviour**
 
-**Why:** Drawer IA matches the engineering modules. It does not match the
-job. Progressive disclosure is the design move.
+`StudyScreens.kt` `MainScreen` `items`: Home, Library, Connected TVs, Kids, Results, Settings, **ProfData**; plus Quiz Setup / Parents if not guest.
 
-**Acceptance:**
+**Change to**
 
-- First-run shell: Home with the three steps (SS-EXP-01). Bottom or page
-  actions: Home, Child, Result — not more.
-- After first quiz, "More" reveals TVs, Settings, Parents.
-- ProfData never appears in production builds.
-- Back always returns to Home, not to a stack the parent does not remember.
-- Tap targets ≥ 48 dp; body type ≥ 16 sp; primary button full width.
+First-run: Home + Child + Result (or the 3-step Home only). ProfData **never** in production (`BuildConfig.DEBUG`). After first quiz, More reveals TVs / Settings.
 
-**Not this:** A tablet-style nav rail. Bottom nav with six items.
+**Where to change**
+
+| Path | Why |
+|------|-----|
+| `mobile/.../ui/StudyScreens.kt` `items` | Filter by `hasCompletedFirstQuiz` + `BuildConfig.DEBUG` |
+| `mobile/.../data/SessionManager.kt` | Flag |
+| `docs/SCREEN_FLOWS_MOBILE.md` | Drawer map |
+
+**Do not:** Six-item bottom nav. Removing Library’s start-session capability — **move** it to Home Start quiz.
+
+**Verify:** Guest and signed-in; ProfData absent in release assemble.
 
 ---
 
@@ -109,29 +121,27 @@ job. Progressive disclosure is the design move.
 | | |
 |---|---|
 | **Priority** | P1 |
-| **Role** | Kid |
-| **Apps** | `study-shield` TV |
-| **Component** | `LiveMascot` |
+| **Code status** | **Partial — enhance `LiveMascot` usage** |
+| **Work type** | **Reuse** code-drawn `LiveMascot` in `QuizSession`, not only `QuizResultsScreen`. |
+| **Repos** | `study-shield` **tv**. |
 
-**Story:** As a child, I want my character on screen *while* I play (a corner
-wave, a hop on a right answer), so the quiz feels like a friend, not an exam
-that celebrates at the end.
+**Current behaviour**
 
-**Why:** Greeting research already said characters raise engagement. The
-mascot currently peaks on the 4-second result screen. A thin implementation
-is the existing code-drawn `LiveMascot`, not new illustration pipelines.
+`LiveMascot(avatarId)` is composed in `QuizResultsScreen` (completion). `avatarId` already arrives on `InterruptionCommand` / intent extra `AVATAR_ID`. 12 styles in `MainActivity.kt`.
 
-**Acceptance:**
+**Change to**
 
-- During questions, the kid's chosen avatar sits in a corner, idle (blink /
-  breathe only — no chaotic motion that steals focus).
-- Correct: short hop. Wrong: gentle "try" expression — never shame.
-- Result screen keeps the current celebration and auto-close.
-- No extra network, no extra screens, no kid-facing settings to "equip"
-  items.
+Small corner mascot during questions (idle blink). Hop on correct, gentle on wrong. Keep 4s celebration at end. No extra screens.
 
-**Not this:** A wardrobe/shop. Spine/Lottie packs that bloat the TV APK.
-A second mascot picker on the TV.
+**Where to change**
+
+| Path | Why |
+|------|-----|
+| `tv/.../MainActivity.kt` `QuizSession` | Compose `LiveMascot` with a smaller modifier; drive expression from last answer |
+
+**Do not:** New illustration pipeline. Lottie bloat. Shop/wardrobe. Mascot picker on TV (picker stays on mobile Kid Form).
+
+**Verify:** `:tv:assembleDebug`. Avatar matches kid profile.
 
 ---
 
@@ -140,23 +150,23 @@ A second mascot picker on the TV.
 | | |
 |---|---|
 | **Priority** | P1 |
-| **Role** | Kid |
-| **Apps** | `study-shield` TV |
-| **Component** | TV theme |
+| **Code status** | **Partial — enhance existing focus/scale** |
+| **Work type** | **Enhance** `QuizUI` colors/padding. |
+| **Repos** | `study-shield` **tv**. |
 
-**Story:** As a child in a bright or dim living room, I want answers that
-stay readable and a focus box I can see from the sofa.
+**Current behaviour**
 
-**Acceptance:**
+Green gradient quiz; focused tile white + 1.08 scale; padding ~40.dp.
 
-- Contrast of question and answers meets a practical 10-foot check on a
-  cheap 32" panel (white/very light text on dark green is OK if tiles are
-  distinct).
-- Focused tile: thick border + scale, not colour-only.
-- Motion stays under ~300 ms; no flashing.
-- Safe margins for overscan on older sticks.
+**Change to**
 
-**Not this:** A full Material You redesign. Parent-facing themes on the TV.
+Focus visible from 3 m (border + scale, not colour-only). Safe overscan. No flashing.
+
+**Where to change:** `tv/.../MainActivity.kt` `QuizUI` / `TrueFalseUI` modifiers.
+
+**Do not:** Parent themes on TV.
+
+**Verify:** Android TV emulator D-pad; cheap stick if available.
 
 ---
 
@@ -165,21 +175,23 @@ stay readable and a focus box I can see from the sofa.
 | | |
 |---|---|
 | **Priority** | P2 |
-| **Role** | Parent |
-| **Apps** | `study-shield` mobile |
-| **Component** | Design system / components |
+| **Code status** | **Partial** |
+| **Work type** | **Enhance** quiz review icons; depends on SS-EXP-03 for real bilingual chrome. |
+| **Repos** | `study-shield` **mobile**. |
 
-**Story:** As a parent who recognises pictures faster than English, I want
-every primary action to have a simple icon *and* a short word in my language.
+**Current behaviour**
 
-**Acceptance:**
+`QuizReviewScreen.kt`: ThumbUp / ThumbDown / Flag **icon-only** (contentDescription). Screen-flow doc currently requires icon-only.
 
-- Start, Stop, Child, TV, Result each have a unique icon used everywhere.
-- Do not rely on colour alone for Did well / Needs practice.
-- Icon-only feedback on quiz review (👍👎🚩) gets a long-press or caption
-  in the parent language — today's icon-only pattern is easy to mis-tap.
+**Change to**
 
-**Not this:** Emoji soup. A custom icon font project before copy is fixed.
+Visible short caption in app locale (SS-EXP-03). Long-press still OK. Did well / Needs practice not colour-only (SS-EXP-04).
+
+**Where to change:** `mobile/.../ui/quiz/QuizReviewScreen.kt`.
+
+**Do not:** Wait on a custom icon font.
+
+**Verify:** TalkBack + visible label.
 
 ---
 
@@ -187,20 +199,27 @@ every primary action to have a simple icon *and* a short word in my language.
 
 | | |
 |---|---|
-| **Priority** | P2 |
-| **Role** | Kid, Parent (glancing at TV) |
-| **Apps** | `study-shield` TV |
-| **Component** | Idle state |
+| **Priority** | P2 (do with SS-EXP-02 / SS-EXP-05 — cheap and high impact) |
+| **Code status** | **Not in code** |
+| **Work type** | **Enhance** the idle `else` branch in `MainContent`. |
+| **Repos** | `study-shield` **tv**. |
 
-**Story:** As a family walking past the TV, I want a friendly "Ready to
-play" with the pairing code, not a developer splash of device name + IP +
-rocket.
+**Current behaviour**
 
-**Acceptance:**
+```text
+{deviceName}
+Interrupter Ready! 🚀
+Connect using IP: {ip}
+```
 
-- Hero: mascot + "Ready to play" + large pairing code.
-- Device name and IP in a small footer for the rare support case.
-- After 15 s the app may yield to the home screen (current behaviour) so we
-  do not hijack the TV — keep that; it is part of being thin.
+15s ring then `moveTaskToBack`.
 
-**Not this:** An idle content browser. Ads. A clock app.
+**Change to**
+
+Mascot optional + “Ready to play” + large pairing code (SS-EXP-02). Device name + IP in footer. Keep 15s yield so the TV is not hijacked.
+
+**Where to change:** `tv/.../MainActivity.kt` idle `Column`. Pairing code source: SS-EXP-02 / `TvServerService`.
+
+**Do not:** Idle content browser. Ads.
+
+**Verify:** `:tv:assembleDebug`. Phone still connects (NSD + code).

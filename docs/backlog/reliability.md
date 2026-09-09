@@ -1,7 +1,6 @@
-# Reliability
+# Reliability — LLM implementation briefs
 
-Failures that look like "the app is not for people like me". Pairing, lost
-results, and slow first load are UX bugs, not only ops bugs.
+Copy **one** story into Buzz. Invariants: [llm-brief.md](llm-brief.md). Lost results and slow first bundle are UX bugs.
 
 ---
 
@@ -10,31 +9,33 @@ results, and slow first load are UX bugs, not only ops bugs.
 | | |
 |---|---|
 | **Priority** | P0 |
-| **Role** | Parent |
-| **Apps** | `study-shield` mobile, `study-shield` TV, `study-shield-backend` |
-| **Component** | `InterruptionCommand` / `QuizResultMessage` / results sync |
+| **Code status** | **Done in code** on TV ↔ mobile. **Partial** on backend identity. |
+| **Work type** | **Do not rebuild** the socket path. Optional follow-up: key backend results by `childProfileId`. |
+| **Repos** | Already done: `study-shield` mobile + tv. Follow-up: `study-shield-backend`. |
 
-**Story:** As a parent, I want Rohan's score on Rohan's page every time,
-including after I switch child or account, so I never think the quiz
-"disappeared".
+**Current behaviour (protect this)**
 
-**Why:** Already failed once (stale `saved_command` / callback port). This is
-the trust-breaker. Dual copies of the message types make it easy to regress.
+- `kidName` on `InterruptionCommand` and `QuizResultMessage` in **both** `Models.kt` and `tv/InterruptionCommand.kt`.
+- `StudyViewModel.startSession` sets `kidName` from the selected kid.
+- `StudyRepository` result listener: `childName = message.kidName ?: …`.
+- `TvServerService.checkSavedLock()`: `savedCommand.copy(mobileIp = null, resultCallbackPort = null)`.
+- Backend `POST /api/quiz-results` stores **`childName` string**; `quiz-attempts` uses `childProfileId`.
 
-**Acceptance:**
+**Change to (follow-up only)**
 
-- Switching child mid-evening never writes the next result onto the previous
-  child.
-- TV reboot during a quiz does not send the old account's callback
-  (existing `checkSavedLock` rule — keep tests around it).
-- Parent sees "Rohan finished" within a few seconds of the TV celebration,
-  or a plain "Waiting for TV…" then success.
-- If the phone missed the callback: one "Get result" retry, then queue —
-  never silent drop.
-- Contract tests in SS-QLT-01 fail the build if `kidName` (and new fields)
-  drift between modules.
+If you pick this card, **do not** rewrite the LAN protocol. Optionally add `childId` to results **in addition to** `kidName` (still both protocol copies) and persist FK on `quiz_results`. Rename-safe attribution.
 
-**Not this:** Asking the kid to type their name on the TV.
+**Where to change (follow-up)**
+
+| Path | Why |
+|------|-----|
+| `study-shield-backend/.../quizresult/entity/QuizResult.java` | childProfileId |
+| Mobile `QuizResultRepository` | Send id |
+| Both `InterruptionCommand` copies | If new fields |
+
+**Do not:** Kid typing their name on TV. Removing `kidName` echo.
+
+**Verify:** Switch kid, run two quizzes, each result on the correct card. Reboot TV mid-lock: no result sent to old callback (`checkSavedLock` tests if you add them — SS-QLT-01).
 
 ---
 
@@ -43,29 +44,41 @@ the trust-breaker. Dual copies of the message types make it easy to regress.
 | | |
 |---|---|
 | **Priority** | P0 |
-| **Role** | Parent |
-| **Apps** | `study-shield-backend`, `study-shield` mobile |
-| **Component** | `POST /api/v1/quiz-bundles` / `QuizBundleSeeder` |
+| **Code status** | **Partial — TD-1 still open** |
+| **Work type** | **Enhance** `QuizBundleService` / seeder: **move work off the request path**. |
+| **Repos** | **`study-shield-backend`** primary. Mobile only if you need a better waiting/error string. |
 
-**Story:** As a parent who just tapped Start, I want the quiz to begin on the
-TV almost immediately, so my child does not walk away while a spinner thinks.
+**Current behaviour**
 
-**Why:** Backend tech debt TD-1: first bundle for a class can take minutes
-while the catalog seeds on the request path. Rural latency to Render makes
-it worse. Activation dies here.
+- `QuizBundleService.createBundle` → `catalogSeeder.ensureCatalogForClass(...)` **inside the request transaction**.
+- `QuizBundleSeeder` creates subjects/packs/quizzes/questions row-by-row (`QUIZZES_PER_CLASS = 2`, `QUESTIONS_PER_QUIZ = 10`).
+- `app.catalog-seeding.enabled` default **false** (`application.yml`). `CatalogStartupSeeder` exists but is off.
+- `TECH_DEBT.md` **TD-1**: first-hit can take minutes; Hikari leak warnings.
+- Mobile `QuizLoader` / `PackCache`: waits on `POST /api/v1/quiz-bundles`.
 
-**Acceptance:**
+**Change to**
 
-- `POST /api/v1/quiz-bundles` p95 < 2 s even for a class never seen in that
-  environment (seed off the request path, or pre-seed Nursery–10).
-- No Hikari "apparent leak" on first-hit.
-- Mobile shows a determinate wait max a couple of seconds, then a plain
-  error: "Could not load quiz. Try again." — not a timeout stack.
-- Trial seed on login (`TrialContentDownloader`) must not block the UI.
+`POST /api/v1/quiz-bundles` p95 &lt; 2s even for an unseen class. Seed at startup **or** async on miss; request path only reads.
 
-**Not this:** Moving seeding onto the TV. Bundling the whole bank in the APK
-again (contradicts the on-demand content ADR) unless as a tiny Nursery
-offline fallback.
+**Where to change**
+
+| Path | Why |
+|------|-----|
+| `ss-modulith/.../content/service/QuizBundleService.java` | Stop calling ensure in the request TX |
+| `ss-modulith/.../content/service/QuizBundleSeeder.java` | Batch / pre-seed |
+| `ss-modulith/.../content/seed/CatalogStartupSeeder.java` | Enable for known bands or document ops pre-load |
+| `ss-modulith/src/main/resources/application.yml` | Flag |
+| `TECH_DEBT.md` | Close TD-1 when done |
+| `ss-regression-suite/.../content-freemium.feature` | Still asserts “bundle seeds catalog” — **update** the scenario |
+| `mobile/.../data/QuizLoader.kt` | Timeout/error copy only |
+
+**Implementation pointers**
+
+- Do **not** move seeding onto the TV.
+- Do **not** re-bundle the full bank into the APK (content ADR: on-demand load). Tiny Nursery fallback on mobile is a last resort.
+- `POST /api/v1/questions/load` remains the ops/bulk path.
+
+**Verify:** `./gradlew :ss-modulith:test`. Hit `quiz-bundles` twice for a fresh class against a remote-like DB; second and first both &lt; 2s after the fix. No Hikari leak logs.
 
 ---
 
@@ -74,24 +87,32 @@ offline fallback.
 | | |
 |---|---|
 | **Priority** | P1 |
-| **Role** | Parent |
-| **Apps** | `study-shield` mobile, `study-shield` TV |
-| **Component** | Pairing errors |
+| **Code status** | **Partial — enhance `NOT_ON_WIFI` copy** |
+| **Work type** | **Enhance** existing Wi-Fi checks; add a simple illustration + reuse on discovery fail. |
+| **Repos** | `study-shield` **mobile** (TV idle copy is SS-DSN-07). |
 
-**Story:** As a parent whose phone is on mobile data and TV is on home Wi-Fi,
-I want a picture that says "put both on the same Wi-Fi", so I can fix it
-without a technician.
+**Current behaviour**
 
-**Acceptance:**
+- `StudyRepository.probeTtsLanguages`: fail fast `IllegalStateException("NOT_ON_WIFI")`.
+- `StudyScreens.kt` maps that to a sentence about saving greeting language.
+- `TvManagementScreen` / Library: empty discovery text “Searching…” / “Scan stopped”.
+- `HistoryRepository.getCurrentSsid()` exists.
 
-- Detect "not on Wi-Fi" (already used for TTS probe) and show a full-screen
-  illustration: phone + TV + one router.
-- Detect "Wi-Fi but TV not found": same illustration plus "Type the code on
-  the TV".
-- Never mention AP isolation in the UI; put that in operator docs.
-- Works when SSID names are in local script.
+**Change to**
 
-**Not this:** A network diagnostic log dump in the parent UI.
+When not on Wi-Fi, or discovery empty: full-screen **phone + TV + one router**. Same component for pairing (SS-EXP-02) and TTS probe.
+
+**Where to change**
+
+| Path | Why |
+|------|-----|
+| New composable e.g. `mobile/.../ui/SameWifiHelp.kt` | Reuse |
+| `StudyScreens.kt` ControlScreen / greeting probe UI | Call it |
+| `TvManagementScreen.kt` | Empty state |
+
+**Do not:** Dump AP isolation logs in the parent UI.
+
+**Verify:** Phone on cellular, TV on Wi-Fi: picture, not a stack trace.
 
 ---
 
@@ -100,26 +121,34 @@ without a technician.
 | | |
 |---|---|
 | **Priority** | P1 |
-| **Role** | Parent |
-| **Apps** | `study-shield` mobile |
-| **Component** | Offline queue (results, feedback, profiles) |
+| **Code status** | **Partial — enhance existing queues** |
+| **Work type** | **Enhance** `ConnectivityObserver` + Room pending tables. Add a **Home banner**. Backend idempotency is a plus. |
+| **Repos** | `study-shield` **mobile** (banner). Optional `study-shield-backend` for idempotent `POST /api/quiz-results`. |
 
-**Story:** As a parent with patchy data, I want to run a quiz on the LAN and
-read "Saved on this phone. Will send when internet is back." so I am not
-afraid I broke it.
+**Current behaviour**
 
-**Why:** Offline queues already exist (results, feedback). The UX does not
-explain them. 7-second timeouts help, but a spinner still feels like death.
+- OkHttp 7s timeouts (`RetrofitClient`).
+- Queues: quiz results, kid profiles, `pending_feedback`; flush in `ConnectivityObserver`.
+- Toasts: “Offline — changes will sync…”.
+- Opening the app must **not** re-post synced results (`QuizResultRepository.insertFromBackend` / delete offline rows) — **keep this**.
+- Backend result POST is **not** idempotent (duplicates if replayed).
 
-**Acceptance:**
+**Change to**
 
-- Home shows a small, plain banner only when something is waiting to send.
-- Start quiz on LAN works with no backend (cached packs for that child).
-- Opening the app does **not** re-post old results (already specified in
-  screen flows — keep a regression test).
-- Feedback 👍👎🚩 still queues; parent is not blocked.
+Home banner: “Saved on this phone. Will send when internet is back.” LAN quiz still works via `PackCache`. Optional: client-generated result id unique on server.
 
-**Not this:** A sync-conflict UI. Multi-device merge for v1.
+**Where to change**
+
+| Path | Why |
+|------|-----|
+| `mobile/.../ui/StudyScreens.kt` Home | Banner from SessionManager / pending DAOs |
+| `mobile/.../data/QuizResultRepository.kt` | Keep no-repost invariant |
+| `mobile/.../data/FeedbackRepository.kt` | Already upsert-friendly |
+| `study-shield-backend/.../quizresult/` | Idempotency key if you touch backend |
+
+**Do not:** Sync-conflict UI. Multi-device merge.
+
+**Verify:** Airplane mode, finish TV quiz (LAN), see banner, restore network, one server row.
 
 ---
 
@@ -128,21 +157,28 @@ explain them. 7-second timeouts help, but a spinner still feels like death.
 | | |
 |---|---|
 | **Priority** | P2 |
-| **Role** | Kid, Parent |
-| **Apps** | `study-shield` TV, `study-shield` mobile |
-| **Component** | `LockPersistenceManager` / BootReceiver |
+| **Code status** | **Partial — enhance `LockPersistenceManager`** |
+| **Work type** | **Enhance** existing boot replay. Add **expiry**. Keep callback strip. |
+| **Repos** | `study-shield` **tv** (mobile unlock already exists). |
 
-**Story:** As a child, I want the TV to become a normal TV again after a
-power cut, unless mum/dad starts a new quiz — so a stale lock never
-kidnaps the living room.
+**Current behaviour**
 
-**Acceptance:**
+- `LockPersistenceManager` saves serialized command; `BootReceiver` → `TvServerService.checkSavedLock()`.
+- Replays any non-UNLOCK command with callback fields stripped.
+- **No TTL** — BLOCK can return after a power cut hours later.
 
-- BLOCK/TIMER restored after reboot only if still within the original
-  duration; otherwise idle.
-- STUDY/MCQ restored only if the phone is still reachable; else idle and
-  parent sees "TV restarted — start again".
-- Emergency unlock on the phone always wins.
-- Stale callback fields are stripped (existing ADR).
+**Change to**
 
-**Not this:** Cloud-controlled TV locks. TV calling the backend to ask.
+Restore BLOCK/TIMER only if still within original duration. STUDY/MCQ: idle unless phone is reachable; parent starts again. Phone `UNLOCK` always wins.
+
+**Where to change**
+
+| Path | Why |
+|------|-----|
+| `tv/.../LockPersistenceManager.kt` | Store saved-at timestamp |
+| `tv/.../TvServerService.kt` `checkSavedLock` | Expiry policy |
+| `tv/.../BootReceiver.kt` | Already starts service |
+
+**Do not:** Cloud locks. TV calling backend.
+
+**Verify:** Save BLOCK, reboot after duration elapsed → idle. UNLOCK from phone still works.
