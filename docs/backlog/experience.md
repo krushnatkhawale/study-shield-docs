@@ -127,7 +127,7 @@ Parent taps a **TV name** (or types a **4-digit code** shown huge on the TV). IP
 | | |
 |---|---|
 | **Priority** | P0 |
-| **Code status** | **Done in code (IMPLEMENTED)** |
+| **Code status** | **Reverted** — language picker and multi-locale resources removed 2026-09-10. App is English-only; language subjects will be implemented later. |
 | **Work type** | **New** Android resource locales + first-run picker. **Do not confuse** with existing `KidQuizConfig.greetingLanguage`. |
 | **Repos** | `study-shield` **mobile** (TV already maps greeting locale via TTS). |
 
