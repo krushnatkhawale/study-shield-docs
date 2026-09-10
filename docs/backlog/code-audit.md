@@ -10,7 +10,7 @@ Checked against local checkouts on **2026-09-09**:
 
 ## Original thinking (first draft)
 
-The first stories were **not** a “this is unimplemented” list.
+The first stories were **not** a "this is unimplemented" list.
 
 They came from **requirement refinement for two people**:
 
@@ -19,7 +19,7 @@ They came from **requirement refinement for two people**:
 
 Inputs were this docs site, screen-flow markdown, ADRs, and those constraints — **not** a file-by-file pass over Kotlin/Java. That was the wrong order for a team whose code is ahead of the docs.
 
-So several cards described work that **already shipped** (result `kidName`, NSD discovery, guest login, read-lock/TTS, mascot on results, feedback API, 2 quizzes per class, 7s timeouts, offline queues). Others mixed “keep this” with “build this”.
+So several cards described work that **already shipped** (result `kidName`, NSD discovery, guest login, read-lock/TTS, mascot on results, feedback API, 2 quizzes per class, 7s timeouts, offline queues). Others mixed "keep this" with "build this".
 
 ## What we did instead
 
@@ -38,9 +38,9 @@ Evidence is paths in those three repos. Docs (`SCREEN_FLOWS_*.md`, ADRs) were tr
 
 | Status | Count | IDs |
 |--------|------:|-----|
-| Done in code | 8 | SS-EXP-01 (first-run 3-step stepper + "Start quiz" Home CTA), SS-EXP-02 (pair-code pairing: name list ✕ 4-digit code, IP hidden), SS-EXP-03 (app locale: values-hi/mr + first-run picker → `setApplicationLocales`), SS-EXP-04 (Kid Detail/Results/Kids lead with plain-words band sentence; charts under "See more"), SS-EXP-05 (jargon-free copy: TV app_name, NSD device name, Start on TV/Unlock TV, plain pack labels), SS-EXP-06 (age-labelled class chips; syllabus off on first add), SS-REL-01 (TV↔mobile `kidName` + stale callback strip), SS-BIZ-03 (bundle has class/board/subject strings) |
+| Done in code | 10 | SS-EXP-01 (first-run 3-step stepper + "Start quiz" Home CTA), SS-EXP-02 (pair-code pairing: name list ✕ 4-digit code, IP hidden), SS-EXP-03 (app locale: values-hi/mr + first-run picker → `setApplicationLocales`), SS-EXP-04 (Kid Detail/Results/Kids lead with plain-words band sentence; charts under "See more"), SS-EXP-05 (jargon-free copy: TV app_name, NSD device name, Start on TV/Unlock TV, plain pack labels), SS-EXP-06 (age-labelled class chips; syllabus off on first add), SS-EXP-07 (on-device TTS for first-run stepper: "Read steps aloud" toggle + `SetupTts.kt`), SS-EXP-08 (one-tap play again: reuses last kid/TV/pack with shuffled options), SS-REL-01 (TV↔mobile `kidName` + stale callback strip), SS-BIZ-03 (bundle has class/board/subject strings) |
 | Partial | 17 | guest, TV D-pad, idle/IP, lock reboot, offline copy, bundle latency, FITB/length, feedback inbox, EVS, admin load, freemium cap, low-end SDK, mascot timing, contrast, review icons, Wi-Fi copy, contract tests (backend JSON only) |
-| Not in code | 13 | play-again, PIN (dummy switch), setup TTS, pictures on TV, drawer IA, WhatsApp share, paywall, APK guide, Hindi script, telemetry, shared command schema tests, PR template, parent-app i18n |
+| Not in code | 11 | PIN (dummy switch), pictures on TV, drawer IA, WhatsApp share, paywall, APK guide, Hindi script, telemetry, shared command schema tests, PR template, parent-app i18n |
 | Practice | 2 | SS-QLT-02, SS-QLT-06 |
 
 SS-REL-01 is **done on the wire** (both Android copies send/echo `kidName`; TV replay strips `mobileIp` / `resultCallbackPort`). Backend results are still keyed by **child name string**, not `childProfileId` — that leftover sits under the same card as a small follow-up, not a rebuild.
@@ -69,4 +69,4 @@ These are easy to miss if you only read older design docs:
 5. **Nursery as pictures + 5 spoken questions** — bank is 10 text MCQ/TF; `imageUrl` is unused; auto-dictation **defaults off**.
 6. **Contract test for duplicated `InterruptionCommand`** — two Kotlin copies, TV `QuizQuestion` has no `id`; no shared test.
 
-Cheap wins that are still **Not in code**: hide ProfData, “Play again”, dummy PIN switch.
+Cheap wins that are still **Not in code**: dummy PIN switch.

@@ -304,9 +304,11 @@ rename prompt already ships in the first-run stepper (SS-EXP-01 "Edit" + `kid_re
 | | |
 |---|---|
 | **Priority** | P1 |
-| **Code status** | **Not in code** |
+| **Code status** | **Done in code (IMPLEMENTED)** |
 | **Work type** | **New** on **mobile** using on-device TTS. Pattern already exists on **TV** — copy the idea, not the TV classes. |
 | **Repos** | `study-shield` **mobile**. |
+
+**Implemented (2026-09-10):** `SetupTts.kt` — lifecycle-aware on-device `TextToSpeech` helper, tied to composition via `rememberSetupTts()`. `FirstRunStepper` gains a "Read steps aloud" `Switch` (persisted in `SessionManager.speakSetupSteps`); when enabled, one short sentence is spoken per step in the chosen app locale (EN/HI/MR) using Android's on-device TTS. No network dependency; silently no-ops if TTS engine is unavailable. Verified `:mobile:assembleDebug` = BUILD SUCCESSFUL (corretto 21).
 
 **Current behaviour**
 
@@ -335,9 +337,11 @@ Optional “Speak steps” on first-run screens (SS-EXP-01). One short sentence 
 | | |
 |---|---|
 | **Priority** | P1 |
-| **Code status** | **Not in code** |
+| **Code status** | **Done in code (IMPLEMENTED)** |
 | **Work type** | **New** button that **reuses** `StudyViewModel.startSession` + last kid/TV/pack. |
 | **Repos** | `study-shield` **mobile** (TV already accepts a new `MCQ` command). |
+
+**Implemented (2026-09-10):** `StudyViewModel` now remembers `lastContent` + `lastKidId` when a session starts and exposes `replayLastSession()` — reuses the last kid/TV/pack, re-shuffles options via `QuizQuestion.shuffledOptions()`, restores `selectedTvIp`/`selectedKidId`, and re-sends to the TV (immediate, not scheduled). "Play again for {name}" buttons: Session Results list top card + Result Detail bottom button (`SessionResultScreen.kt`) and a blue CTA card on Home below Start quiz (`StatsDashboardScreen`). If no TV is remembered, the tap routes to Connected TVs instead of no-opping. Verified `:mobile:assembleDebug` = BUILD SUCCESSFUL (corretto 21); TV unchanged.
 
 **Current behaviour**
 

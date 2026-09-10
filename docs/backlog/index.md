@@ -38,32 +38,30 @@ Work **down this list**. Done items are listed after it so they are not picked a
 | 4 | [SS-CNT-01](content.md#ss-cnt-01-short-sessions-typed-answers-are-not-for-young-kids) | Quizzes are 10 questions; Library can still send FITB | Partial | TV, Backend, Mobile |
 | 5 | [SS-DSN-02](design.md#ss-dsn-02-nurserykg-questions-are-pictures-voice) | No question images; auto-dictation defaults **off** | Not in code | Mobile, TV, Backend |
 | 6 | [SS-QLT-01](quality-and-speed.md#ss-qlt-01-one-schema-for-tv-mobile-commands) | Two Kotlin copies; no contract test | Not in code | Mobile, TV |
-| 7 | [SS-EXP-08](experience.md#ss-exp-08-one-tap-play-again-for-the-same-child) | No Play again | Not in code | Mobile, TV |
-| 8 | [SS-REL-04](reliability.md#ss-rel-04-offline-is-a-sentence-not-a-spinner) | Queues exist; parent copy is a toast, not a plain banner | Partial | Mobile |
-| 9 | [SS-CNT-02](content.md#ss-cnt-02-reported-questions-reach-a-human-the-same-day) | Feedback API + blacklist exist; no admin inbox | Partial | Admin, Backend, Mobile |
-| 10 | [SS-DSN-04](design.md#ss-dsn-04-mascot-is-present-during-the-quiz-not-only-at-the-end) | `LiveMascot` on results only | Partial | TV |
-| 11 | [SS-REL-03](reliability.md#ss-rel-03-same-wi-fi-in-one-picture) | `NOT_ON_WIFI` for TTS probe only; no picture | Partial | Mobile |
-| 12 | [SS-BIZ-02](business-value.md#ss-biz-02-whatsapp-share-of-a-win) | No share sheet | Not in code | Mobile |
-| 13 | [SS-CNT-03](content.md#ss-cnt-03-hindi-subject-uses-hindi-script) | Hindi subject is English GK (documented D3) | Not in code | Backend, TV, Mobile |
-| 14 | [SS-EXP-11](experience.md#ss-exp-11-numeric-pin-not-email-recovery) | Settings PIN switch is a no-op | Not in code | Mobile |
-| 15 | [SS-EXP-07](experience.md#ss-exp-07-voice-walkthrough-for-setup) | No parent-setup TTS | Not in code | Mobile |
-| 16 | [SS-EXP-09](experience.md#ss-exp-09-shared-phone-second-adult) | Guest works; overlay + email; no OTP; Add Parent is TODO | Partial | Mobile, Backend |
-| 17 | [SS-EXP-10](experience.md#ss-exp-10-kid-never-sees-parent-controls) | No kid menu; remote can pause then double-press exit; idle shows IP | Partial | TV |
-| 18 | [SS-DSN-01](design.md#ss-dsn-01-tv-quiz-is-four-huge-choices-nothing-else) | 2×2 tiles exist; still “Question N of M”, pause, FITB grid | Partial | TV |
-| 19 | [SS-CNT-05](content.md#ss-cnt-05-admin-loads-the-bank-without-curl) | Question CRUD exists; bank load is still curl | Partial | Admin, Backend |
-| 20 | [SS-REL-05](reliability.md#ss-rel-05-reboot-must-not-trap-the-kid-on-an-old-lock) | Replay works and strips callback; does not expire by duration | Partial | TV |
-| 21 | [SS-BIZ-05](business-value.md#ss-biz-05-freemium-unlock-after-the-family-has-won-once) | Cap = 2; no paywall (Trial prompt is “update class”) | Partial | Mobile, Backend |
-| 22 | [SS-QLT-04](quality-and-speed.md#ss-qlt-04-thin-tv-checklist-on-every-tv-pr) | No PR template | Not in code | TV |
-| 23 | [SS-QLT-05](quality-and-speed.md#ss-qlt-05-privacy-safe-activation-telemetry) | No analytics | Not in code | Backend, Mobile |
-| 24 | [SS-BIZ-01](business-value.md#ss-biz-01-time-to-first-quiz-is-the-north-star) | No funnel measurement | Not in code | All |
-| 25 | [SS-DSN-05](design.md#ss-dsn-05-living-room-contrast-and-d-pad-focus) | Focus scale exists; no overscan/contrast pass | Partial | TV |
-| 26 | [SS-DSN-06](design.md#ss-dsn-06-bilingual-labels-icon-short-word) | Review is icon-only by design today | Partial | Mobile |
-| 27 | [SS-CNT-04](content.md#ss-cnt-04-local-life-in-evs-examples) | Some India flavour; EVS still generic science | Partial | Backend |
-| 28 | [SS-BIZ-04](business-value.md#ss-biz-04-low-end-android-is-the-default-device) | minSdk 24/23; no size budget or cheap-device CI | Partial | Mobile, TV |
-| 29 | [SS-BIZ-06](business-value.md#ss-biz-06-apk-share-path-for-places-play-is-painful) | No install picture-guide | Not in code | Mobile, TV |
-| 30 | [SS-QLT-03](quality-and-speed.md#ss-qlt-03-cheap-phone-cheap-tv-in-ci-and-in-the-room) | No device-lab ritual in repo | Practice | Team |
-| 31 | [SS-QLT-02](quality-and-speed.md#ss-qlt-02-definition-of-done-includes-a-rural-parent-pass) | Working agreement | Practice | Team |
-| 32 | [SS-QLT-06](quality-and-speed.md#ss-qlt-06-weekly-tv-demo-and-small-slices) | Cadence | Practice | Team |
+| 7 | [SS-REL-04](reliability.md#ss-rel-04-offline-is-a-sentence-not-a-spinner) | Queues exist; parent copy is a toast, not a plain banner | Partial | Mobile |
+| 8 | [SS-CNT-02](content.md#ss-cnt-02-reported-questions-reach-a-human-the-same-day) | Feedback API + blacklist exist; no admin inbox | Partial | Admin, Backend, Mobile |
+| 9 | [SS-DSN-04](design.md#ss-dsn-04-mascot-is-present-during-the-quiz-not-only-at-the-end) | `LiveMascot` on results only | Partial | TV |
+| 10 | [SS-REL-03](reliability.md#ss-rel-03-same-wi-fi-in-one-picture) | `NOT_ON_WIFI` for TTS probe only; no picture | Partial | Mobile |
+| 11 | [SS-BIZ-02](business-value.md#ss-biz-02-whatsapp-share-of-a-win) | No share sheet | Not in code | Mobile |
+| 12 | [SS-CNT-03](content.md#ss-cnt-03-hindi-subject-uses-hindi-script) | Hindi subject is English GK (documented D3) | Not in code | Backend, TV, Mobile |
+| 13 | [SS-EXP-11](experience.md#ss-exp-11-numeric-pin-not-email-recovery) | Settings PIN switch is a no-op | Not in code | Mobile |
+| 14 | [SS-EXP-09](experience.md#ss-exp-09-shared-phone-second-adult) | Guest works; overlay + email; no OTP; Add Parent is TODO | Partial | Mobile, Backend |
+| 15 | [SS-EXP-10](experience.md#ss-exp-10-kid-never-sees-parent-controls) | No kid menu; remote can pause then double-press exit; idle shows IP | Partial | TV |
+| 16 | [SS-DSN-01](design.md#ss-dsn-01-tv-quiz-is-four-huge-choices-nothing-else) | 2×2 tiles exist; still “Question N of M”, pause, FITB grid | Partial | TV |
+| 17 | [SS-CNT-05](content.md#ss-cnt-05-admin-loads-the-bank-without-curl) | Question CRUD exists; bank load is still curl | Partial | Admin, Backend |
+| 18 | [SS-REL-05](reliability.md#ss-rel-05-reboot-must-not-trap-the-kid-on-an-old-lock) | Replay works and strips callback; does not expire by duration | Partial | TV |
+| 19 | [SS-BIZ-05](business-value.md#ss-biz-05-freemium-unlock-after-the-family-has-won-once) | Cap = 2; no paywall (Trial prompt is “update class”) | Partial | Mobile, Backend |
+| 20 | [SS-QLT-04](quality-and-speed.md#ss-qlt-04-thin-tv-checklist-on-every-tv-pr) | No PR template | Not in code | TV |
+| 21 | [SS-QLT-05](quality-and-speed.md#ss-qlt-05-privacy-safe-activation-telemetry) | No analytics | Not in code | Backend, Mobile |
+| 22 | [SS-BIZ-01](business-value.md#ss-biz-01-time-to-first-quiz-is-the-north-star) | No funnel measurement | Not in code | All |
+| 23 | [SS-DSN-05](design.md#ss-dsn-05-living-room-contrast-and-d-pad-focus) | Focus scale exists; no overscan/contrast pass | Partial | TV |
+| 24 | [SS-DSN-06](design.md#ss-dsn-06-bilingual-labels-icon-short-word) | Review is icon-only by design today | Partial | Mobile |
+| 25 | [SS-CNT-04](content.md#ss-cnt-04-local-life-in-evs-examples) | Some India flavour; EVS still generic science | Partial | Backend |
+| 26 | [SS-BIZ-04](business-value.md#ss-biz-04-low-end-android-is-the-default-device) | minSdk 24/23; no size budget or cheap-device CI | Partial | Mobile, TV |
+| 27 | [SS-BIZ-06](business-value.md#ss-biz-06-apk-share-path-for-places-play-is-painful) | No install picture-guide | Not in code | Mobile, TV |
+| 28 | [SS-QLT-03](quality-and-speed.md#ss-qlt-03-cheap-phone-cheap-tv-in-ci-and-in-the-room) | No device-lab ritual in repo | Practice | Team |
+| 29 | [SS-QLT-02](quality-and-speed.md#ss-qlt-02-definition-of-done-includes-a-rural-parent-pass) | Working agreement | Practice | Team |
+| 30 | [SS-QLT-06](quality-and-speed.md#ss-qlt-06-weekly-tv-demo-and-small-slices) | Cadence | Practice | Team |
 
 ## Done in code — do not pick as new work
 
@@ -77,6 +75,8 @@ Work **down this list**. Done items are listed after it so they are not picked a
 | [SS-EXP-04](experience.md#ss-exp-04-performance-in-plain-words-not-charts-first) | Kid Detail leads with a plain-words hero "Rohan did well — 8 out of 10" (bands did well / did OK / needs practice, EN/HI/MR); charts under "See more"; empty state gains "Start their first quiz"; Kids card + Results list use the same phrase | Band thresholds are a fixed ≥80 / 50–79 / <50 rule in code, not a percentile service |
 | [SS-EXP-05](experience.md#ss-exp-05-hide-engineering-words) | Jargon-free copy: TV launcher "StudyShield", NSD shows the device name (type stays `_interrupter._tcp`), mobile Control = "Set up a session / Start on TV / Unlock TV", pack cards show the subject not "Freemium …" | Banned words still set *internal* protocol/class names (callback, socket, bundle) on purpose; only UI copy changed |
 | [SS-EXP-06](experience.md#ss-exp-06-pick-the-child-by-age-and-photo-not-board-jargon) | Kid form class picker is age-labelled chips ("Nursery · age 3" … "Class 10 · age 15") using exact backend class names; birth year pre-selects the class; birth year optional (name+class required); syllabus only when editing (board `ALL` default) | Default Kid 1 / Trial rename prompt already ships in the first-run stepper (SS-EXP-01) |
+| [SS-EXP-07](experience.md#ss-exp-07-voice-walkthrough-for-setup) | On-device TTS for first-run stepper: "Read steps aloud" toggle persists in `SessionManager.speakSetupSteps`; `SetupTts.kt` lifecycle helper speaks one sentence per step in EN/HI/MR; no network dependency; silent no-op if TTS unavailable | Toggle only on the first-run stepper; TTS engine availability varies by device |
+| [SS-EXP-08](experience.md#ss-exp-08-one-tap-play-again-for-the-same-child) | "Play again for {name}" on Results (list top card + detail button) and Home CTA; `StudyViewModel.replayLastSession()` reuses last kid/TV/pack and re-shuffles options; routes to Connected TVs if no TV remembered | Replay uses the in-memory last pack; after process death the parent goes through Start quiz |
 
 Related **already shipped** (not separate leftover stories): guest login, NSD discovery, Kid Detail charts, read-lock/TTS/fast-answer/greeting/mascot, 👍👎🚩 API, 2 quizzes × 10 questions, 7s HTTP timeout, offline Room queues, admin question editor + blacklist, default Kid 1/Trial.
 
