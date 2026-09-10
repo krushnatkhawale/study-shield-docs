@@ -127,7 +127,7 @@ Parent taps a **TV name** (or types a **4-digit code** shown huge on the TV). IP
 | | |
 |---|---|
 | **Priority** | P0 |
-| **Code status** | **Not in code** (TV greeting locale exists; **app chrome does not**) |
+| **Code status** | **Done in code (IMPLEMENTED)** |
 | **Work type** | **New** Android resource locales + first-run picker. **Do not confuse** with existing `KidQuizConfig.greetingLanguage`. |
 | **Repos** | `study-shield` **mobile** (TV already maps greeting locale via TTS). |
 
@@ -168,7 +168,7 @@ Parent picks हिंदी / मराठी / English once; **all parent scre
 | | |
 |---|---|
 | **Priority** | P0 |
-| **Code status** | **Partial — enhance Kid Detail / kid cards** |
+| **Code status** | **Done in code (IMPLEMENTED)** |
 | **Work type** | **Enhance** existing Feature 6 charts: lead with a sentence; keep charts under “See more”. |
 | **Repos** | `study-shield` **mobile**. |
 
@@ -200,6 +200,12 @@ Opening a kid shows **“Rohan did well — 8 out of 10”** (localized bands: D
 
 **Verify:** Kid with 0, 1, and many results. `:mobile:assembleDebug`.
 
+**Implemented (2026-09-10):** Hero sentence first ("Rohan did well — 8 out of 10", bands "did well /
+did OK / needs practice" via shared `bandStringRes()`, localized EN/HI/MR); charts collapsed under
+"See more"; empty state gains "Start their first quiz" → Content Selection; Kids card shows the same
+plain-words summary sentence + ⚠ fast flag; Results list row reads "8 out of 10 — did well".
+Fast-answer copy stays parent-only; TV `QuizResultsScreen` untouched (praise-only). `assembleDebug` passes.
+
 ---
 
 ### SS-EXP-05 — Hide engineering words
@@ -207,7 +213,7 @@ Opening a kid shows **“Rohan did well — 8 out of 10”** (localized bands: D
 | | |
 |---|---|
 | **Priority** | P0 |
-| **Code status** | **Not in code** |
+| **Code status** | **Done in code (IMPLEMENTED)** |
 | **Work type** | **Enhance** existing screens by **renaming copy only** where possible. No new architecture. |
 | **Repos** | `study-shield` **mobile + tv**. |
 
@@ -240,6 +246,15 @@ Parent-facing: Start quiz, Stop quiz / Unlock TV, TV ready, Child, Result. Banne
 
 **Verify:** grep UI strings for Interrupter/Activate/callback. Pairing still discovers TVs.
 
+**Implemented (2026-09-10):** TV `app_name` → "StudyShield"; NSD `serviceName` is the device's own name
+(no "Interrupter-" prefix) while `serviceType` stays `_interrupter._tcp` — discovery/pairing
+unchanged. Mobile Library Control: "⚙️ Set up a session", "🚀 Start on TV", "🔓 Unlock TV",
+"Fill in the blanks" (all EN/HI/MR); Select Content pack cards show the plain subject/category
+(never "Freemium …"; `QuizLoader` keeps a legacy strip for old pack names). TV idle was already
+"Ready to play!" + pairing code (SS-EXP-02); `ExpUpgradePromptDialog` copy was already plain.
+Verified: grep of `mobile/src` `tv/src` (excluding `.wt` worktrees) shows no banned UI words;
+`:mobile:assembleDebug` + `:tv:assembleDebug` pass.
+
 ---
 
 ### SS-EXP-06 — Pick the child by age and photo, not board jargon
@@ -247,7 +262,7 @@ Parent-facing: Start quiz, Stop quiz / Unlock TV, TV ready, Child, Result. Banne
 | | |
 |---|---|
 | **Priority** | P1 |
-| **Code status** | **Partial — enhance Kid form** |
+| **Code status** | **Done in code (IMPLEMENTED)** |
 | **Work type** | **Enhance** `KidFormScreen`. Keep avatar chips. Soften default Kid 1. |
 | **Repos** | `study-shield` **mobile**. Backend class-grade list already exists (`GET class-grades`). |
 
@@ -273,6 +288,14 @@ Required: name + class shown as Nursery / LKG / UKG / 1…10 with typical age. M
 **Do not:** Aadhaar, school name, UDISE. Quiz presentation toggles stay on Kid Detail.
 
 **Verify:** Save kid, start quiz, TV greeting uses name + `avatarId` on `InterruptionCommand`.
+
+**Implemented (2026-09-10):** `KidFormScreen` class field is a chip grid with typical ages —
+"Nursery · age 3", "Junior KG · age 4", "Sr KG · age 5", "Class N · age N+5" — values are the exact
+backend class-grades strings; birth year pre-selects the matching class (mirrors backend
+`classNameForAge`); birth year is now optional (name + class required); syllabus/board is omitted on
+first add (edit only, board `ALL` default). No `KidProfileRepository` change: the default Kid 1
+rename prompt already ships in the first-run stepper (SS-EXP-01 "Edit" + `kid_rename_tip`).
+`:mobile:assembleDebug` passes.
 
 ---
 

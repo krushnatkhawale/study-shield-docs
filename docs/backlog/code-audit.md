@@ -38,9 +38,9 @@ Evidence is paths in those three repos. Docs (`SCREEN_FLOWS_*.md`, ADRs) were tr
 
 | Status | Count | IDs |
 |--------|------:|-----|
-| Done in code | 4 | SS-EXP-01 (first-run 3-step stepper + "Start quiz" Home CTA), SS-EXP-02 (pair-code pairing: name list ✕ 4-digit code, IP hidden), SS-REL-01 (TV↔mobile `kidName` + stale callback strip), SS-BIZ-03 (bundle has class/board/subject strings) |
-| Partial | 19 | charts, guest, TV D-pad, idle/IP, lock reboot, offline copy, bundle latency, FITB/length, feedback inbox, EVS, admin load, freemium cap, low-end SDK, mascot timing, contrast, review icons, kid form, Wi-Fi copy, contract tests (backend JSON only) |
-| Not in code | 15 | app Hindi/Marathi, jargon rewrite, play-again, PIN (dummy switch), setup TTS, pictures on TV, drawer IA, WhatsApp share, paywall, APK guide, Hindi script, telemetry, shared command schema tests, PR template, parent-app i18n |
+| Done in code | 8 | SS-EXP-01 (first-run 3-step stepper + "Start quiz" Home CTA), SS-EXP-02 (pair-code pairing: name list ✕ 4-digit code, IP hidden), SS-EXP-03 (app locale: values-hi/mr + first-run picker → `setApplicationLocales`), SS-EXP-04 (Kid Detail/Results/Kids lead with plain-words band sentence; charts under "See more"), SS-EXP-05 (jargon-free copy: TV app_name, NSD device name, Start on TV/Unlock TV, plain pack labels), SS-EXP-06 (age-labelled class chips; syllabus off on first add), SS-REL-01 (TV↔mobile `kidName` + stale callback strip), SS-BIZ-03 (bundle has class/board/subject strings) |
+| Partial | 17 | guest, TV D-pad, idle/IP, lock reboot, offline copy, bundle latency, FITB/length, feedback inbox, EVS, admin load, freemium cap, low-end SDK, mascot timing, contrast, review icons, Wi-Fi copy, contract tests (backend JSON only) |
+| Not in code | 13 | play-again, PIN (dummy switch), setup TTS, pictures on TV, drawer IA, WhatsApp share, paywall, APK guide, Hindi script, telemetry, shared command schema tests, PR template, parent-app i18n |
 | Practice | 2 | SS-QLT-02, SS-QLT-06 |
 
 SS-REL-01 is **done on the wire** (both Android copies send/echo `kidName`; TV replay strips `mobileIp` / `resultCallbackPort`). Backend results are still keyed by **child name string**, not `childProfileId` — that leftover sits under the same card as a small follow-up, not a rebuild.
@@ -64,9 +64,9 @@ These are easy to miss if you only read older design docs:
 
 1. **One obvious first path** — ✅ SS-EXP-01 shipped 2026-09-09: post-auth Home is a 1 Add child → 2 Find TV → 3 Start quiz stepper until the first quiz; then Home leads with a "Start quiz" CTA. ProfData hidden from the first-run drawer.
 2. **Pairing without IP as the hero** — ✅ SS-EXP-02 shipped 2026-09-10: TV idle shows a persisted 4-digit code huge ("Ready to play", IP small); the code is advertised via NSD `PAIR_CODE` TXT and verified with a non-persisted `PAIR_CODE_CHECK` probe; mobile Library / first-run stepper / Connected TVs all lead with the TV-name list, fall back to the numeric code keypad, and hide manual IP behind "Need help?". Leftover for SS-DSN-07: idle copy/room-code polish.
-3. **Parent language + copy** — greeting TTS can be Hindi/Marathi; the **app chrome is English hardcoded**. No `values-hi` / `values-mr`.
+3. **Parent language + copy** — ✅ SS-EXP-03 + SS-EXP-04 shipped 2026-09-10: `values-hi/` + `values-mr/` on the first-quiz path, first-run language picker persist + apply (`setApplicationLocales`), and results/Kid Detail/Kids lead with plain-words sentences in the app locale. TV greeting stays per-kid `greetingLanguage`.
 4. **First bundle latency** — `ensureCatalogForClass` still runs on `POST /quiz-bundles` (TECH_DEBT TD-1). Startup seed default **off**.
 5. **Nursery as pictures + 5 spoken questions** — bank is 10 text MCQ/TF; `imageUrl` is unused; auto-dictation **defaults off**.
 6. **Contract test for duplicated `InterruptionCommand`** — two Kotlin copies, TV `QuizQuestion` has no `id`; no shared test.
 
-Cheap wins that are still **Not in code**: rename Interrupter copy, hide ProfData, “Play again”, results headline before charts, dummy PIN switch.
+Cheap wins that are still **Not in code**: hide ProfData, “Play again”, dummy PIN switch.
