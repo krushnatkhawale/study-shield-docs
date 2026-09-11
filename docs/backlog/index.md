@@ -63,19 +63,24 @@ Work **down this list**. Done items are listed after it so they are not picked a
 | 29 | [SS-QLT-02](quality-and-speed.md#ss-qlt-02-definition-of-done-includes-a-rural-parent-pass) | Working agreement | Practice | Team |
 | 30 | [SS-QLT-06](quality-and-speed.md#ss-qlt-06-weekly-tv-demo-and-small-slices) | Cadence | Practice | Team |
 
+## Reverted / parked — do not pick as new work
+
+| ID | What happened | Watch-out |
+|----|----------------|-----------|
+| [SS-EXP-01](experience.md#ss-exp-01-three-steps-to-first-quiz) | **Reverted 2026-09-11:** first-run 3-step stepper + `hasCompletedFirstQuiz` gate removed with the OTP pairing work (krushnat: the OTP path never worked on his network; pre-OTP flow restored). Home is `StatsDashboardScreen` again with the "Start quiz" CTA + SS-EXP-08 "Play again" retained. | Re-introduce as a plain stepper that calls existing screens; pairing (SS-EXP-02) is the parkable piece |
+| [SS-EXP-02](experience.md#ss-exp-02-pair-the-tv-without-typing-an-ip) | **Reverted 2026-09-11:** `PairCodeStore`, `PAIR_CODE` TXT, `PAIR_CODE_CHECK`, `PairCodeMessage`, code entry UI all removed via `git revert 2fa0614`. TV idle = "Interrupter Ready! 🚀" + IP; manual IP is the primary connect path again. | Root cause of the failure: OTP only matches against multicast-discovered TVs and his router filters mDNS. Retry needs a seed/unicast channel, not multicast |
+| [SS-EXP-03](experience.md#ss-exp-03-app-speaks-the-parents-language) | ~~Hindi/Marathi app chrome~~ **Reverted 2026-09-10:** language picker + `values-hi/` + `values-mr/` removed; app is English-only. Language subjects will be implemented separately later. | N/A — reverted |
+
 ## Done in code — do not pick as new work
 
 | ID | What shipped | Watch-out |
 |----|----------------|-----------|
-| [SS-EXP-01](experience.md#ss-exp-01-three-steps-to-first-quiz) | First-run Home is a 1 Add child → 2 Find TV → 3 Start quiz stepper until the first quiz; returning users get a "Start quiz" CTA on Home; `hasCompletedFirstQuiz` gates it | Hiding ProfData fully is SS-DSN-03 |
-| [SS-EXP-02](experience.md#ss-exp-02-pair-the-tv-without-typing-an-ip) | TV shows a persisted 4-digit pairing code (huge) on idle; advertised via NSD `PAIR_CODE` TXT and verified with a non-persisted `PAIR_CODE_CHECK` probe; phone connects by TV name or types the code (numeric keypad); manual IP hidden behind "Need help?" in Library, first-run stepper, and Connected TVs | Two protocol copies still exist (contract test: SS-QLT-01); Used TVs that don't advertise/answer still need IP |
 | [SS-REL-01](reliability.md#ss-rel-01-the-result-always-lands-on-the-right-kid) | `kidName` on command + result (mobile and TV); `checkSavedLock` strips stale callback | Backend `quiz_results` still keyed by **name**, not child id |
 | [SS-BIZ-03](business-value.md#ss-biz-03-school-syllabus-trust-without-a-brochure) | Bundles carry `className` / `boardCode` / `subjects` | Pack cards still say “Freemium {category}” (copy: SS-EXP-05) |
-| [SS-EXP-03](experience.md#ss-exp-03-app-speaks-the-parents-language) | ~~Hindi/Marathi app chrome~~ **Reverted 2026-09-10:** language picker + `values-hi/` + `values-mr/` removed; app is English-only. Language subjects will be implemented separately later. | N/A — reverted |
 | [SS-EXP-04](experience.md#ss-exp-04-performance-in-plain-words-not-charts-first) | Kid Detail leads with a plain-words hero "Rohan did well — 8 out of 10" (bands did well / did OK / needs practice, EN/HI/MR); charts under "See more"; empty state gains "Start their first quiz"; Kids card + Results list use the same phrase | Band thresholds are a fixed ≥80 / 50–79 / <50 rule in code, not a percentile service |
 | [SS-EXP-05](experience.md#ss-exp-05-hide-engineering-words) | Jargon-free copy: TV launcher "StudyShield", NSD shows the device name (type stays `_interrupter._tcp`), mobile Control = "Set up a session / Start on TV / Unlock TV", pack cards show the subject not "Freemium …" | Banned words still set *internal* protocol/class names (callback, socket, bundle) on purpose; only UI copy changed |
-| [SS-EXP-06](experience.md#ss-exp-06-pick-the-child-by-age-and-photo-not-board-jargon) | Kid form class picker is age-labelled chips ("Nursery · age 3" … "Class 10 · age 15") using exact backend class names; birth year pre-selects the class; birth year optional (name+class required); syllabus only when editing (board `ALL` default) | Default Kid 1 / Trial rename prompt already ships in the first-run stepper (SS-EXP-01) |
-| [SS-EXP-07](experience.md#ss-exp-07-voice-walkthrough-for-setup) | On-device TTS for first-run stepper: "Read steps aloud" toggle persists in `SessionManager.speakSetupSteps`; `SetupTts.kt` lifecycle helper speaks one sentence per step in EN/HI/MR; no network dependency; silent no-op if TTS unavailable | Toggle only on the first-run stepper; TTS engine availability varies by device |
+| [SS-EXP-06](experience.md#ss-exp-06-pick-the-child-by-age-and-photo-not-board-jargon) | Kid form class picker is age-labelled chips ("Nursery · age 3" … "Class 10 · age 15") using exact backend class names; birth year pre-selects the class; birth year optional (name+class required); syllabus only when editing (board `ALL` default) | First-run stepper was reverted with SS-EXP-01; the age-labelled chip grid itself still ships in the kid form |
+| [SS-EXP-07](experience.md#ss-exp-07-voice-walkthrough-for-setup) | On-device TTS for first-run stepper: "Read steps aloud" toggle persists in `SessionManager.speakSetupSteps`; `SetupTts.kt` lifecycle helper speaks one sentence per step in EN/HI/MR; no network dependency; silent no-op if TTS unavailable | Toggle lived only on the first-run stepper (reverted 2026-09-11); `SetupTts.kt` + `speakSetupSteps` remain until the stepper returns |
 | [SS-EXP-08](experience.md#ss-exp-08-one-tap-play-again-for-the-same-child) | "Play again for {name}" on Results (list top card + detail button) and Home CTA; `StudyViewModel.replayLastSession()` reuses last kid/TV/pack and re-shuffles options; routes to Connected TVs if no TV remembered | Replay uses the in-memory last pack; after process death the parent goes through Start quiz |
 
 Related **already shipped** (not separate leftover stories): guest login, NSD discovery, Kid Detail charts, read-lock/TTS/fast-answer/greeting/mascot, 👍👎🚩 API, 2 quizzes × 10 questions, 7s HTTP timeout, offline Room queues, admin question editor + blacklist, default Kid 1/Trial.
@@ -85,7 +90,7 @@ Related **already shipped** (not separate leftover stories): guest login, NSD di
 Do **not** start pictures, paywall, or OTP until this path is obvious on a cheap phone + cheap stick:
 
 1. Hide ProfData; rename Library buttons (SS-EXP-05, SS-DSN-03).
-2. First-run: child (or skip Kid 1) → pick discovered TV by **name** → Start quiz (SS-EXP-01, SS-EXP-02).
+2. First-run: child (or skip Kid 1) → connect by **IP** (or discovered TV name) → Start quiz. The OTP pairing stepper (SS-EXP-01/02) is parked pending a seeded/unicast pairing channel — multicast discovery is unreliable on the field network.
 3. Idle TV: Ready to play + name, IP in the footer (SS-DSN-07).
 4. Move catalog seed off the request path (SS-REL-02).
 

@@ -13,12 +13,14 @@ Local roots: `/Users/hulk/.buzz/REPOS/study-shield` (modules `mobile/`, `tv/`), 
 | | |
 |---|---|
 | **Priority** | P0 |
-| **Code status** | **Done in code (IMPLEMENTED)** |
+| **Code status** | **Reverted 2026-09-11 — parked for future** (was Done in code) |
 | **Work type** | **New** first-run shell on mobile. Reuse existing Kid form, TV discovery, and Select Content — do not rewrite those from scratch. |
 | **Repos** | `study-shield` **mobile only** (optional copy tweaks on TV are SS-DSN-07 / SS-EXP-05). |
 | **Depends on** | Pairing UX SS-EXP-02; hide ProfData SS-DSN-03; copy SS-EXP-05. Can ship a Home stepper that *calls* existing screens before those land. |
 
-**Implemented (2026-09-09):** Added `FirstRunStepper` (1 Add child → 2 Find TV → 3 Start quiz) as the Home destination until the first quiz starts; new `SessionManager.hasCompletedFirstQuiz` flag gates the switched Home (`StudyScreens.kt`, `SessionManager.kt`). The stepper reuses the existing kid form (`KidFormScreen`), NSD discovery (`StudyViewModel.startDiscovery` / `selectedTvIp`), and `ContentSelectionScreen`; manual-IP entry is moved behind "Need help?". ProfData removed from first-run drawer. Returning users with a kid + remembered TV get a "Start quiz" CTA card on Home. Verified `:mobile:assembleDebug`; `docs/SCREEN_FLOWS_MOBILE.md` updated.
+**Reverted (2026-09-11):** krushnat asked to revert the OTP/pairing work (SS-EXP-01 + SS-EXP-02) to the pre-OTP flow that was working — the first-run stepper (and with it `hasCompletedFirstQuiz`, `FirstRunStepper`, `StepAddChild/StepFindTv/StepStartQuiz`, `PairCodeEntryCard`) was removed via `git revert 2fa0614`. Home is back to `StatsDashboardScreen` (with the later SS-EXP-08 "Play again" CTA kept). Manual IP is the hero again in Library/Connected TVs. Verified `:mobile:assembleDebug` + `:tv:assembleDebug` = BUILD SUCCESSFUL; `SCREEN_FLOWS_MOBILE.md` / `SCREEN_FLOWS_TV.md` reverted. No push.
+
+**Originally implemented (2026-09-09):** Added `FirstRunStepper` (1 Add child → 2 Find TV → 3 Start quiz) as the Home destination until the first quiz starts; new `SessionManager.hasCompletedFirstQuiz` flag gates the switched Home (`StudyScreens.kt`, `SessionManager.kt`). The stepper reuses the existing kid form (`KidFormScreen`), NSD discovery (`StudyViewModel.startDiscovery` / `selectedTvIp`), and `ContentSelectionScreen`; manual-IP entry is moved behind "Need help?". ProfData removed from first-run drawer. Returning users with a kid + remembered TV get a "Start quiz" CTA card on Home. Verified `:mobile:assembleDebug`; `docs/SCREEN_FLOWS_MOBILE.md` updated.
 
 **Current behaviour**
 
@@ -66,9 +68,11 @@ A numbered **1 Child → 2 TV → 3 Start** path as the first surface after auth
 | | |
 |---|---|
 | **Priority** | P0 |
-| **Code status** | **Done in code (IMPLEMENTED)** |
+| **Code status** | **Reverted 2026-09-11 — parked for future** (was Done in code) |
 | **Work type** | **Enhance** NSD discovery + Remember-TV. Stop using the IP field as the primary UI. Add a human pairing code on TV idle. |
 | **Repos** | `study-shield` **mobile + tv** (same Android repo, two modules). |
+
+**Reverted (2026-09-11):** krushnat asked to revert the OTP/pairing work to the pre-OTP flow that was working (OPTP never matched because his network filters mDNS multicast, so discovery saw zero TVs and the code had nothing to match against; manual IP always worked). Via `git revert 2fa0614`: `PairCodeStore`, `PAIR_CODE` NSD TXT, `PAIR_CODE_CHECK` probe, `PairCodeMessage`, `connectByPairCode` / `pairCodeOf` / `verifyPairCode`, `TvDeviceItem` code rows, and code-entry UI in Library / Connected TVs were all removed. TV idle is back to “Interrupter Ready! 🚀” + “Connect using IP:”. Manual IP is the hero again. Verified `:mobile:assembleDebug` + `:tv:assembleDebug` (corretto 21). No push. Re-introduce via a seeded (not multicast-dependent) pairing channel when retried.
 
 **Implemented (2026-09-10):**
 

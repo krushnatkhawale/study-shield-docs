@@ -38,9 +38,10 @@ Evidence is paths in those three repos. Docs (`SCREEN_FLOWS_*.md`, ADRs) were tr
 
 | Status | Count | IDs |
 |--------|------:|-----|
-| Done in code | 9 | SS-EXP-01 (first-run 3-step stepper + "Start quiz" Home CTA), SS-EXP-02 (pair-code pairing: name list ✕ 4-digit code, IP hidden), SS-EXP-04 (Kid Detail/Results/Kids lead with plain-words band sentence; charts under "See more"), SS-EXP-05 (jargon-free copy: TV app_name, NSD device name, Start on TV/Unlock TV, plain pack labels), SS-EXP-06 (age-labelled class chips; syllabus off on first add), SS-EXP-07 (on-device TTS for first-run stepper: "Read steps aloud" toggle + `SetupTts.kt`), SS-EXP-08 (one-tap play again: reuses last kid/TV/pack with shuffled options), SS-REL-01 (TV↔mobile `kidName` + stale callback strip), SS-BIZ-03 (bundle has class/board/subject strings) |
+| Done in code | 7 | SS-EXP-04 (Kid Detail/Results/Kids lead with plain-words band sentence; charts under "See more"), SS-EXP-05 (jargon-free copy: TV app_name, NSD device name, Start on TV/Unlock TV, plain pack labels), SS-EXP-06 (age-labelled class chips; syllabus off on first add), SS-EXP-07 (on-device TTS: `SetupTts.kt` + `speakSetupSteps`), SS-EXP-08 (one-tap play again: reuses last kid/TV/pack with shuffled options), SS-REL-01 (TV↔mobile `kidName` + stale callback strip), SS-BIZ-03 (bundle has class/board/subject strings) |
 | Partial | 17 | guest, TV D-pad, idle/IP, lock reboot, offline copy, bundle latency, FITB/length, feedback inbox, EVS, admin load, freemium cap, low-end SDK, mascot timing, contrast, review icons, Wi-Fi copy, contract tests (backend JSON only) |
 | Not in code | 12 | PIN (dummy switch), pictures on TV, drawer IA, WhatsApp share, paywall, APK guide, Hindi script, telemetry, shared command schema tests, PR template, parent-app i18n, SS-EXP-03 (reverted: language picker + multi-locale removed; app English-only) |
+| Reverted / parked | 2 | SS-EXP-01 (first-run stepper + Home CTA gate), SS-EXP-02 (pair-code pairing) — reverted together 2026-09-11, pre-OTP IP flow restored (K.t.: pairing required multicast his router filters) |
 | Practice | 2 | SS-QLT-02, SS-QLT-06 |
 
 SS-REL-01 is **done on the wire** (both Android copies send/echo `kidName`; TV replay strips `mobileIp` / `resultCallbackPort`). Backend results are still keyed by **child name string**, not `childProfileId` — that leftover sits under the same card as a small follow-up, not a rebuild.
@@ -62,8 +63,8 @@ These are easy to miss if you only read older design docs:
 
 ## Highest-value remaining work (from code, not from imagination)
 
-1. **One obvious first path** — ✅ SS-EXP-01 shipped 2026-09-09: post-auth Home is a 1 Add child → 2 Find TV → 3 Start quiz stepper until the first quiz; then Home leads with a "Start quiz" CTA. ProfData hidden from the first-run drawer.
-2. **Pairing without IP as the hero** — ✅ SS-EXP-02 shipped 2026-09-10: TV idle shows a persisted 4-digit code huge ("Ready to play", IP small); the code is advertised via NSD `PAIR_CODE` TXT and verified with a non-persisted `PAIR_CODE_CHECK` probe; mobile Library / first-run stepper / Connected TVs all lead with the TV-name list, fall back to the numeric code keypad, and hide manual IP behind "Need help?". Leftover for SS-DSN-07: idle copy/room-code polish.
+1. **One obvious first path** — ⚠️ SS-EXP-01 **reverted 2026-09-11** (with SS-EXP-02): the first-run stepper + `hasCompletedFirstQuiz` Home gate are gone; Home is `StatsDashboardScreen` with the "Start quiz" CTA + SS-EXP-08 "Play again" retained. Parked for a future retry as a plain stepper.
+2. **Pairing without IP as the hero** — ⚠️ SS-EXP-02 **reverted 2026-09-11**: `PairCodeStore`, `PAIR_CODE` NSD TXT, `PAIR_CODE_CHECK` probe, and code-entry UI removed via `git revert 2fa0614`; TV idle = "Interrupter Ready! 🚀" + IP, manual IP is the hero again. Root cause: OTP only matches multicast-discovered TVs and the field network filters mDNS — re-introduce only with a seeded/unicast channel.
 3. **Parent language + copy** — ⚠️ SS-EXP-03 **reverted** 2026-09-10: language picker + `values-hi/` + `values-mr/` removed; app is English-only. SS-EXP-04 (plain-words performance) is still shipped. Language subjects will be implemented separately later.
 4. **First bundle latency** — `ensureCatalogForClass` still runs on `POST /quiz-bundles` (TECH_DEBT TD-1). Startup seed default **off**.
 5. **Nursery as pictures + 5 spoken questions** — bank is 10 text MCQ/TF; `imageUrl` is unused; auto-dictation **defaults off**.
