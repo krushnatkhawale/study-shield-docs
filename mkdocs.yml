@@ -54,6 +54,7 @@ nav:
       - Mobile & TV apps: architecture/mobile-tv.md
   - Per-repo guides:
       - Backend (study-shield-backend): per-repo/backend.md
+      - Admin (study-shield-backend-admin): per-repo/admin.md
       - Mobile & TV (study-shield): per-repo/mobile-tv.md
       - Open-School: per-repo/open-school.md
   - Decisions:

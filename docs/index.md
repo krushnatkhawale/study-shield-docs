@@ -21,7 +21,7 @@ The whole system as a single box, seen from the outside: who uses it, and what i
 |------|---------|-------------------|
 | `study-shield` | Android mobile + Android TV apps | `study-shield/docs/`, `quiz-schema.md`, `SCREEN_FLOWS_*.md` |
 | `study-shield-backend` | Spring Boot modulith (API) | `study-shield-backend/ss-modulith/docs/` |
-| `study-shield-backend-admin` | Admin tooling | (repo) |
+| `study-shield-backend-admin` | Vaadin admin console | this site: [per-repo/admin](per-repo/admin.md) |
 | `open-school` | Open-School / digital school | `open-school/docs/{RESEARCH,PLANS}/` |
 | `my-private-digital-school` | Private digital-school data/repo | (repo) |
 
@@ -29,7 +29,7 @@ The whole system as a single box, seen from the outside: who uses it, and what i
 
 - **Backlog** — [paste-ready stories](backlog/index.md) · [how to feed Buzz](backlog/llm-brief.md) · [code audit](backlog/code-audit.md)
 - **Architecture** — [overall system](architecture/system.md), [backend modulith](architecture/backend.md), [mobile & TV](architecture/mobile-tv.md)
-- **Per-repo** — [backend](per-repo/backend.md), [mobile & TV](per-repo/mobile-tv.md), [open-school](per-repo/open-school.md)
+- **Per-repo** — [backend](per-repo/backend.md), [admin](per-repo/admin.md), [mobile & TV](per-repo/mobile-tv.md), [open-school](per-repo/open-school.md)
 - **Decisions** — [question bank process & rules](decisions/question-bank-guide.md), [ADR log](decisions/adr-log.md), [diagramming standard](decisions/diagramming-standard.md)
 
 ## How the site works

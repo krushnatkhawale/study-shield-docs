@@ -60,6 +60,7 @@ These are easy to miss if you only read older design docs:
 - Freemium **2 quizzes per class**, **10 questions** each.
 - Offline queues for results, kids, feedback; OkHttp **7s** timeout.
 - Admin Vaadin: classes, subject order, quizzes, questions, users — **not** bank-load or feedback inbox.
+- Admin Vaadin user management manages **both** audiences: client/mobile users (`/api/v1/users`, filtered to MOBILE/PARENT) and admin users (`/api/v1/admin-users`) via tabs on `/users`.
 
 ## Highest-value remaining work (from code, not from imagination)
 
