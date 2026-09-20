@@ -67,3 +67,18 @@ the console talks to for all CRUD:
 
 - [Architecture: backend](../architecture/backend.md)
 - [Per-repo: backend](backend.md)
+
+## Recent changes — September 2026
+
+- **Unified dialog-grid UX** (`app/.../ui/AdminUi.java`): all entity views build dialogs via
+  `AdminUi.entityDialog` / `entityForm` / `dialogFooter`; ID first-columns, show-all defaults,
+  explicit card flex-grow + min-height grid fix.
+- **Subject mappings label:** the offerings route (`@Route("offerings")`,
+  `OfferingManagementView`) is labelled "Subject mappings" (dashboard/Settings); includes a
+  **bulk-assign subjects** dialog (create missing / delete removed offering rows per board class).
+- **Board classes** (`BoardClassManagementView`): level picker plus display-name auto-suggest
+  (board code + ordinal; never overwrites user edits).
+- **Goals management** (`GoalsManagementView`, nav Operations → Goals,
+  `MainLayout` trophy item): CRUD over the backend `/api/v1/goals` endpoints
+  (see [backend guide](backend.md)).
+- **H2 runtime fallback** for LAN/demo runs (`SecurityConfiguration` permits `/h2-console/**`).

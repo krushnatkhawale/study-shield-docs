@@ -48,3 +48,26 @@ One Postgres database hosts two schemas — one per environment:
 
 - [Architecture: backend](../architecture/backend.md)
 - [Decisions: question bank rules](../decisions/question-bank-guide.md)
+
+## Recent changes — September 2026
+
+- **Global academic structure** (`ss-modulith/.../content`, `sql/schema.sql`):
+  `class_levels` holds 17 ordinals (Playgroup → Class 12); `board_class` carries per-board
+  display labels; global `subjects` have a nullable `classGrade` (`SubjectService` accepts a
+  null `classGradeId`); `board_class_subject` rows are the per-board offerings. Content packs
+  (`ContentPack.offering_id`) and quizzes (`Quiz.offering_id`) carry a nullable offering link,
+  with `GET .../offering/{id}` endpoints to list packs/quizzes per offering.
+- **Enriched responses:** board-class responses include ordinal/boardCode/boardName
+  (`BoardClassService`); offering responses include displayName/ordinal/boardCode/subjectCode/
+  subjectName (`OfferingResponse`); board-class create accepts `ordinal` as an alternative to
+  `classLevelId` (`BoardClassService`: `classLevelId or ordinal is required`).
+- **Seeding & DDL:** `content/seed/AcademicStructureSeeder` (an `ApplicationRunner`,
+  idempotent, gated by `app.academic-seeding.enabled`) seeds the 17 levels/boards/offerings.
+  The real DDL lives in `sql/schema.sql`; `db/migration/V7__academic_structure*.sql` files are
+  documentation-only (commented out, no Flyway in repo).
+- **StudyGoal** (`studygoal` package: `StudyGoal` entity = `goal` table,
+  `StudyGoalController` at `/api/v1/goals` with CRUD plus `/progress?childName=`;
+  Monday-start week counts for `WEEKLY_QUIZZES` / `WEEKLY_BEST` (≥80%), default-goal
+  auto-seed in `StudyGoalService`). Test suite (`StudyGoalServiceTest`) green — 76 tests.
+- The admin console gained **Goals management** for these endpoints (see
+  [admin guide](admin.md)).
