@@ -48,6 +48,7 @@ nav:
       - Reliability: backlog/reliability.md
       - Content: backlog/content.md
       - Quality and speed: backlog/quality-and-speed.md
+      - Productionization: backlog/productionization.md
   - Architecture:
       - Overall system: architecture/system.md
       - Backend modulith: architecture/backend.md
