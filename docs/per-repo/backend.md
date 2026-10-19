@@ -4,10 +4,14 @@
 
 ## Own documentation
 
-- `ss-modulith/docs/ss-modulith.md` — module map, DB schema, migrations, config, deployment.
-- `ss-modulith/docs/QUESTION_BANK_GUIDE.md` — question bank authoring process & rules.
-- `TECH_DEBT.md` — known debt at repo root.
-- `question-bank.json` — full curated bank (560 questions) serialized for `POST /api/v1/questions/load`.
+Documentation now lives on **this site** (the repo keeps only a pointer in `docs/README.md`):
+
+- [Academic structure (global class matrix & offerings)](../reference/academic-structure.md)
+- [Module map, DB schema, config, deployment](../reference/ss-modulith.md)
+- [Question bank process & rules](../decisions/question-bank-guide.md) (synced from the repo's former `ss-modulith/docs/QUESTION_BANK_GUIDE.md`)
+- [Regression suite guide](../reference/ss-regression-suite.md) · [failure report](../reference/regression-failure-report.md)
+- [Tech debt register](../reference/tech-debt.md)
+- `question-bank.json` stays in the repo — full curated bank (560 questions) serialized for `POST /api/v1/questions/load`.
 
 ## Quick commands
 
@@ -49,25 +53,30 @@ One Postgres database hosts two schemas — one per environment:
 - [Architecture: backend](../architecture/backend.md)
 - [Decisions: question bank rules](../decisions/question-bank-guide.md)
 
-## Recent changes — September 2026
+## Recent changes — October 2026
 
-- **Global academic structure** (`ss-modulith/.../content`, `sql/schema.sql`):
-  `class_levels` holds 17 ordinals (Playgroup → Class 12); `board_class` carries per-board
-  display labels; global `subjects` have a nullable `classGrade` (`SubjectService` accepts a
-  null `classGradeId`); `board_class_subject` rows are the per-board offerings. Content packs
-  (`ContentPack.offering_id`) and quizzes (`Quiz.offering_id`) carry a nullable offering link,
-  with `GET .../offering/{id}` endpoints to list packs/quizzes per offering.
-- **Enriched responses:** board-class responses include ordinal/boardCode/boardName
-  (`BoardClassService`); offering responses include displayName/ordinal/boardCode/subjectCode/
-  subjectName (`OfferingResponse`); board-class create accepts `ordinal` as an alternative to
-  `classLevelId` (`BoardClassService`: `classLevelId or ordinal is required`).
-- **Seeding & DDL:** `content/seed/AcademicStructureSeeder` (an `ApplicationRunner`,
-  idempotent, gated by `app.academic-seeding.enabled`) seeds the 17 levels/boards/offerings.
-  The real DDL lives in `sql/schema.sql`; `db/migration/V7__academic_structure*.sql` files are
-  documentation-only (commented out, no Flyway in repo).
+- **Offering-based academic structure merged to main** (2026-10-19, merge `549606d`):
+  the parallel class-grade design was retired. Content is anchored to
+  **offerings** (`board_class_subject` = board + class ordinal + global subject):
+  - `Subject` is global (unique `code`, no `classGrade`); `ClassLevel` carries
+    `Stage` enum (`EARLY_YEARS`/`PRIMARY`/`LOWER_SECONDARY`/`UPPER_SECONDARY`),
+    BigDecimal ages, timestamps; `ContentPack` and `Quiz` reference a single
+    `BoardClassSubject offering` (`offering_id`).
+  - The `Offering`/`ClassGrade` entities, `AcademicStructureSeeder`, and the orphan
+    `db/migration/V7__*.sql` files were deleted. Structure is loaded from JSON via
+    `AcademicStructureLoadService` (load/export/purge/status endpoints under
+    `/api/v1/academic-structure`), with `AcademicStructureBootSeeder` seeding the
+    regression profile from `classpath:academic-structure/*.json`.
+  - HTTP contracts kept the live admin/mobile shapes: offerings CRUD by
+    `boardClassId`+`subjectId`; packs require `offeringId`; board-classes accept
+    `classLevelId or ordinal`; class-levels expose `/ordinal/{n}` in addition to CRUD.
+  - `sql/schema.sql` gained an idempotent `UPPER(stage)` normalization so rows seeded
+    by the retired seeder keep working against the `Stage` enum.
+  - Full suite green: ss-modulith 103/103 + regression suite 255/255 against the
+    rebuilt jar. Design details: [load/export/purge plan](../plans/academic-structure-load-export-flows.md).
 - **StudyGoal** (`studygoal` package: `StudyGoal` entity = `goal` table,
   `StudyGoalController` at `/api/v1/goals` with CRUD plus `/progress?childName=`;
   Monday-start week counts for `WEEKLY_QUIZZES` / `WEEKLY_BEST` (≥80%), default-goal
-  auto-seed in `StudyGoalService`). Test suite (`StudyGoalServiceTest`) green — 76 tests.
-- The admin console gained **Goals management** for these endpoints (see
-  [admin guide](admin.md)).
+  auto-seed in `StudyGoalService`).
+- The admin console gained **Goals management** and the **academic restore console**
+  (backup → purge → load guided flow); see [admin guide](admin.md).

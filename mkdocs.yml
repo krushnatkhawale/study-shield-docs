@@ -58,6 +58,14 @@ nav:
       - Admin (study-shield-backend-admin): per-repo/admin.md
       - Mobile & TV (study-shield): per-repo/mobile-tv.md
       - Open-School: per-repo/open-school.md
+  - Reference:
+      - Academic structure (global class matrix): reference/academic-structure.md
+      - Backend modulith module: reference/ss-modulith.md
+      - Regression suite: reference/ss-regression-suite.md
+      - Regression failure report: reference/regression-failure-report.md
+      - Tech debt register: reference/tech-debt.md
+  - Plans:
+      - Academic structure load/export/purge: plans/academic-structure-load-export-flows.md
   - Decisions:
       - Question bank process & rules: decisions/question-bank-guide.md
       - Decision log (ADR): decisions/adr-log.md
