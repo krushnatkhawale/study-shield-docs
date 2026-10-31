@@ -1,6 +1,12 @@
-# How to feed a story to Buzz (bigpickle / muse)
+# How to implement a feature from the current backlog
 
-Each backlog card below is written as a **self-contained implementation brief**. Copy **one story** (heading through “Verify”) into the agent. Do not paste the whole backlog.
+The work to pick up is a file in [`current/`](current/). Each file is one feature, named `FEAT-<epoch-ms>.md`. The older SS-* pages stay as the long briefs. Do not delete them. Do not move a FEAT file to `implemented/` or `rejected/` yourself.
+
+Say this to a developer agent:
+
+> Refer to llm-brief and implement `<FEAT-id>` from the current backlog.
+
+If no id is given, implement the lowest id in `docs/backlog/current/` (that is rank 1) and name it before writing code.
 
 ## What the agent must read first (local)
 
@@ -40,51 +46,34 @@ JDK for Android: Corretto 21 (`JAVA_HOME` as in [mobile & TV](../architecture/mo
 
 ---
 
-## Run a list of stories in Buzz (copy this)
-
-Paste the block below into a Buzz agent (bigpickle / muse). Replace the story IDs.
+## Implement one current-backlog feature
 
 ```
-Implement StudyShield backlog stories IN ORDER, one at a time, then mark each DONE in the docs.
+Refer to llm-brief and implement FEAT-<id> from the current backlog.
 
-Stories (do not skip or reorder unless a later story is blocked by an earlier one you cannot finish):
-1. SS-EXP-05
-2. SS-DSN-07
-
-Nest / checkouts:
-- /Users/hulk/.buzz/REPOS/study-shield          (mobile/ + tv/)
+Checkouts:
+- /Users/hulk/.buzz/REPOS/study-shield                 (mobile/ + tv/)
 - /Users/hulk/.buzz/REPOS/study-shield-backend
 - /Users/hulk/.buzz/REPOS/study-shield-backend-admin
-- /Users/hulk/.buzz/REPOS/study-shield-docs     (backlog lives here)
+- /Users/hulk/.buzz/REPOS/open-school
+- /Users/hulk/.buzz/REPOS/study-shield-docs           (the feature file lives here)
 
-Before ANY code:
-1. Read study-shield-docs/docs/backlog/llm-brief.md (invariants).
-2. Open study-shield-docs/docs/backlog/index.md, find each ID, follow the link, read the FULL card from heading through Verify.
-3. If Code status is already "Done in code", skip implementation; still confirm and note it.
-4. Practice stories (SS-QLT-02, SS-QLT-03, SS-QLT-06) are process — only add the files the card names (e.g. PR template). Do not invent product features.
+Before any code:
+1. Read docs/backlog/llm-brief.md through the invariants.
+2. Open docs/backlog/current/FEAT-<id>.md. If the id was not given, use the lowest FEAT id in that folder and say which one you are implementing.
+3. Read the SS card named in that file's source field, from the heading through Verify. The FEAT file is the assignment. The SS card is the file list and the verify command.
+4. If the FEAT file is not in current/, stop.
 
-For EACH story, in order:
-A. Implement only that story. Repos/files are on the card. Partial = enhance named existing behaviour. Not in code = add in the named modules. Do not start the next story until this one is verified.
-B. Obey invariants: TV has no HTTP; InterruptionCommand/QuizResultMessage exist in BOTH mobile Models.kt AND tv InterruptionCommand.kt; parent initiates, kid plays; keep kidName + checkSavedLock callback strip.
-C. Verify using the card's Verify section (Gradle assemble/test as named).
-D. Update screen flows if UI changed: study-shield/docs/SCREEN_FLOWS_MOBILE.md and/or SCREEN_FLOWS_TV.md.
-E. Mark the story DONE in study-shield-docs BEFORE starting the next ID:
-   - On the story card: set **Code status** to **Done in code (IMPLEMENTED)**. Add a short **Implemented** line: date, repos/files touched, how it was verified. Keep the old "Current behaviour" as history or replace with "Shipped: …".
-   - In docs/backlog/index.md: remove the row from "Remaining work"; add it under "Done in code" with a one-line watch-out if needed.
-   - In docs/backlog/code-audit.md: move the ID into Done; drop it from Not in code / Partial counts if you update the scoreboard.
-F. Stop that story. Then start the next ID from step A.
+While you work:
+A. Change only the repos named in components. Obey the invariants.
+B. Verify with the SS card's Verify section.
+C. If UI changed, update study-shield/docs/SCREEN_FLOWS_MOBILE.md and/or SCREEN_FLOWS_TV.md.
+D. Use a branch whose name contains the exact id, for example feat/FEAT-<id>.
+E. The pull request title must contain the exact id, for example "FEAT-<id>: <feature name>".
+F. Do not set the FEAT file to Implemented. Do not move it to implemented/ or rejected/. A merged pull request whose title or branch contains that id is what moves it later.
+G. Do not edit the SS-* pages. Do not delete a story.
 
-If a story fails Verify or is blocked: mark it **Partial** (not Done), write what shipped vs what is left on the card, skip to the next ID only if the user said to continue on failure. Default: STOP the queue and report.
-
-Do not push unless I ask. Do not implement stories that are not in the list.
+Do not push unless asked. If Verify fails, stop and report. Do not start a second feature in the same run.
 ```
 
-### How the agent must mark DONE
-
-| File | Edit |
-|------|------|
-| Story card (`experience.md`, `design.md`, …) | `**Code status**` → `**Done in code (IMPLEMENTED)**`. Add **Implemented (YYYY-MM-DD):** files + verify command. |
-| `docs/backlog/index.md` | Move the ID from **Remaining work** to **Done in code**. |
-| `docs/backlog/code-audit.md` | Adjust scoreboard if you maintain counts. |
-
-Do not delete the story. Done cards stay as the record of what shipped.
+A human sets `review: Reject` on a current file to park it. Do not set that yourself.
