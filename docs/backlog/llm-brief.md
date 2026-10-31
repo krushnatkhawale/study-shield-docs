@@ -1,17 +1,26 @@
-# How to feed a story to Buzz (bigpickle / muse)
+# Implement one feature from the current backlog
 
-Each backlog card below is written as a **self-contained implementation brief**. Copy **one story** (heading through “Verify”) into the agent. Do not paste the whole backlog.
+Say this to a developer agent. Replace the id with a file in `docs/backlog/current/`.
+
+```
+Refer to docs/backlog/llm-brief.md and implement FEAT-<id> from the current backlog.
+```
+
+The agent reads this page, then that one file. It does not paste an SS-* card. Those pages stay as the original briefs. The feature file is the work.
 
 ## What the agent must read first (local)
 
+Open a code checkout only when the feature file names it.
+
 | Checkout | What it is |
 |----------|------------|
-| `/Users/hulk/.buzz/REPOS/study-shield` | Android Studio project: Gradle modules **`mobile/`** (parent) and **`tv/`** (kid) |
-| `/Users/hulk/.buzz/REPOS/study-shield-backend` | Spring Boot modulith API (`ss-modulith/`) |
-| `/Users/hulk/.buzz/REPOS/study-shield-backend-admin` | Vaadin admin (`app/`) |
-| `/Users/hulk/.buzz/REPOS/study-shield-docs` | This docs site only — not runtime |
+| `/Users/hulk/.buzz/REPOS/study-shield` | Android Studio project: Gradle modules **`mobile/`** (parent) and **`tv/`** (kid). `krushnatkhawale/study-shield` |
+| `/Users/hulk/.buzz/REPOS/study-shield-backend` | Spring Boot modulith API (`ss-modulith/`). `krushnatkhawale/study-shield-backend` |
+| `/Users/hulk/.buzz/REPOS/study-shield-backend-admin` | Vaadin admin (`app/`). `krushnatkhawale/study-shield-backend-admin` |
+| `/Users/hulk/.buzz/REPOS/open-school` | Separate product. Open it only if the feature names it. |
+| `/Users/hulk/.buzz/REPOS/study-shield-docs` | This docs site. The feature file lives here. |
 
-Architecture in this site: [system](../architecture/system.md), [mobile & TV](../architecture/mobile-tv.md), [backend](../architecture/backend.md). Screen flows in the app repo: `study-shield/docs/SCREEN_FLOWS_MOBILE.md`, `SCREEN_FLOWS_TV.md`.
+Architecture: [system](../architecture/system.md), [mobile & TV](../architecture/mobile-tv.md), [backend](../architecture/backend.md). Screen flows in the app repo: `study-shield/docs/SCREEN_FLOWS_MOBILE.md`, `SCREEN_FLOWS_TV.md`.
 
 ## Invariants — never violate
 
@@ -19,72 +28,71 @@ Architecture in this site: [system](../architecture/system.md), [mobile & TV](..
 2. **Socket pattern:** TV listens `ServerSocket(8888)`. Mobile sends `InterruptionCommand` (includes `mobileIp` + `resultCallbackPort`). TV opens a socket back and sends `QuizResultMessage`.
 3. **Two copies of the protocol.** `InterruptionCommand` / `QuizResultMessage` live in:
    - `study-shield/mobile/src/main/java/com/kaushalya/interrupter/data/Models.kt`
-   - `study-shield/tv/src/main/java/com/kaushalya/interrupter/InterruptionCommand.kt`  
+   - `study-shield/tv/src/main/java/com/kaushalya/interrupter/InterruptionCommand.kt`
    Any new field must be added to **both**, forwarded through `TvServerService` intent extras, and handled in TV `MainActivity`.
 4. **Parent initiates; kid plays.** Settings, catalogs, pairing, paywalls stay on **mobile** (or admin). Do not add menus, login, or browsing on TV.
 5. **Result attribution** uses `kidName` on the command and the result. TV `checkSavedLock()` must keep stripping stale `mobileIp` / `resultCallbackPort`.
 6. After UI changes, update `SCREEN_FLOWS_*.md` in `study-shield/docs/`.
-
-## How a card is structured
-
-- **Code status** — Not in code / Partial / Done.
-- **Work type** — *New* or *Enhance existing* (name the existing behaviour).
-- **Repos / files** — where to edit.
-- **Current behaviour** — what the code does now.
-- **Change to** — the outcome.
-- **Implementation pointers** — classes, patterns, tests to start from.
-- **Do not** — thickness and scope traps.
-- **Verify** — commands and a demo.
+7. Do not implement a file in `rejected/`. Do not clear `review`. A human does that.
 
 JDK for Android: Corretto 21 (`JAVA_HOME` as in [mobile & TV](../architecture/mobile-tv.md)). Backend: `./gradlew :ss-modulith:test`.
 
----
+## How a feature file is structured
 
-## Run a list of stories in Buzz (copy this)
+Front matter: `id`, `name`, `legacy_id`, `scope`, `components`, `priority`, `effort`, `impact`, `release_phase`, `status`, `review`, `created`, `completed`, `source`.
 
-Paste the block below into a Buzz agent (bigpickle / muse). Replace the story IDs.
+Body:
+
+- User story, with a persona from [index.md](index.md) (Kid, Parent, Second adult, Content author, Operator, Engineering)
+- Technical context
+- Two acceptance scenarios, one of them a failure case
+- API / data contract impact, or None
+- Testing requirements
+- Card excerpts: paths and limits copied from the old SS card
+
+`legacy_id` is only a search handle. The filename is the id that goes on the branch and the pull request.
+
+## Run one feature
 
 ```
-Implement StudyShield backlog stories IN ORDER, one at a time, then mark each DONE in the docs.
+Refer to docs/backlog/llm-brief.md and implement FEAT-<id> from the current backlog.
 
-Stories (do not skip or reorder unless a later story is blocked by an earlier one you cannot finish):
-1. SS-EXP-05
-2. SS-DSN-07
+Checkout for the feature file:
+- /Users/hulk/.buzz/REPOS/study-shield-docs
 
-Nest / checkouts:
-- /Users/hulk/.buzz/REPOS/study-shield          (mobile/ + tv/)
+Code checkouts, only if the feature names them:
+- /Users/hulk/.buzz/REPOS/study-shield
 - /Users/hulk/.buzz/REPOS/study-shield-backend
 - /Users/hulk/.buzz/REPOS/study-shield-backend-admin
-- /Users/hulk/.buzz/REPOS/study-shield-docs     (backlog lives here)
+- /Users/hulk/.buzz/REPOS/open-school
 
-Before ANY code:
+Before any code:
 1. Read study-shield-docs/docs/backlog/llm-brief.md (invariants).
-2. Open study-shield-docs/docs/backlog/index.md, find each ID, follow the link, read the FULL card from heading through Verify.
-3. If Code status is already "Done in code", skip implementation; still confirm and note it.
-4. Practice stories (SS-QLT-02, SS-QLT-03, SS-QLT-06) are process — only add the files the card names (e.g. PR template). Do not invent product features.
+2. Read study-shield-docs/docs/backlog/current/FEAT-<id>.md. If that file is missing, stop.
+3. If status is Implemented, or review is Reject, stop. Do not look for a substitute id.
 
-For EACH story, in order:
-A. Implement only that story. Repos/files are on the card. Partial = enhance named existing behaviour. Not in code = add in the named modules. Do not start the next story until this one is verified.
-B. Obey invariants: TV has no HTTP; InterruptionCommand/QuizResultMessage exist in BOTH mobile Models.kt AND tv InterruptionCommand.kt; parent initiates, kid plays; keep kidName + checkSavedLock callback strip.
-C. Verify using the card's Verify section (Gradle assemble/test as named).
-D. Update screen flows if UI changed: study-shield/docs/SCREEN_FLOWS_MOBILE.md and/or SCREEN_FLOWS_TV.md.
-E. Mark the story DONE in study-shield-docs BEFORE starting the next ID:
-   - On the story card: set **Code status** to **Done in code (IMPLEMENTED)**. Add a short **Implemented** line: date, repos/files touched, how it was verified. Keep the old "Current behaviour" as history or replace with "Shipped: …".
-   - In docs/backlog/index.md: remove the row from "Remaining work"; add it under "Done in code" with a one-line watch-out if needed.
-   - In docs/backlog/code-audit.md: move the ID into Done; drop it from Not in code / Partial counts if you update the scoreboard.
-F. Stop that story. Then start the next ID from step A.
+Then:
+A. Implement only that file. Stay inside its components, acceptance, and card excerpts.
+B. Obey the invariants on llm-brief.md.
+C. In each code repo you change, use a branch whose name contains the FEAT id. The pull request title must contain the FEAT id.
+D. Verify with the file's testing section.
+E. Update study-shield/docs/SCREEN_FLOWS_MOBILE.md and/or SCREEN_FLOWS_TV.md if the UI changed.
+F. Do not move the markdown file to implemented/ or rejected/. Do not set review. Do not edit the SS-* pages (index story cards, experience, design, business-value, reliability, content, quality-and-speed, productionization, code-audit).
+G. Optional: set status to In Progress on that one feature file, in its own docs commit. Skip this if you are not committing docs.
+H. Open the pull request. Do not merge it unless the person who invoked you asks.
+I. Stop. Do not start another id.
 
-If a story fails Verify or is blocked: mark it **Partial** (not Done), write what shipped vs what is left on the card, skip to the next ID only if the user said to continue on failure. Default: STOP the queue and report.
+A merged pull request in the last 15 days, whose title or branch contains the FEAT id, is what moves the file later. You do not move it yourself.
 
-Do not push unless I ask. Do not implement stories that are not in the list.
+If verify fails, stop and report what shipped and what is left. Do not mark the file Implemented.
 ```
 
-### How the agent must mark DONE
+## What "done" means
 
-| File | Edit |
-|------|------|
-| Story card (`experience.md`, `design.md`, …) | `**Code status**` → `**Done in code (IMPLEMENTED)**`. Add **Implemented (YYYY-MM-DD):** files + verify command. |
-| `docs/backlog/index.md` | Move the ID from **Remaining work** to **Done in code**. |
-| `docs/backlog/code-audit.md` | Adjust scoreboard if you maintain counts. |
+| Who | What they change |
+|-----|------------------|
+| Developer agent | Code, tests, screen-flow notes, and a pull request whose title contains the FEAT id. |
+| Friday backlog job | After that pull request is merged, moves the file from `current/` to `implemented/` and sets `status: Implemented`. |
+| A human | Sets `review: Reject` to take a file out of the queue. |
 
-Do not delete the story. Done cards stay as the record of what shipped.
+Do not delete a feature file. Shipped files stay in `implemented/`.

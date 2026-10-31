@@ -188,3 +188,90 @@ Designed-for-Families declarations, Data safety submit.
   (Play requires a test track before production for new accounts).
 
 **Verify:** Each item has status (draft/owner-action/done) and a path to the draft text.
+
+---
+
+## Additional code findings — 2026-10-19 audit
+
+Found while scoping the productionization pass. Not covered by SS-PROD-01..08; these are
+**release-blocking** because they leak data or leave release builds unshippable. Do them
+alongside SS-PROD-02 (build config) before SS-PROD-07.
+
+## SS-PROD-09 Release-mode network logging
+
+**Outcome:** Release builds emit no request/response bodies or headers to logcat.
+
+**Repo / files:** `study-shield` — `mobile/src/main/java/com/kaushalya/interrupter/network/RetrofitClient.kt:34-47`, `mobile/build.gradle`.
+
+**Evidence:** `HttpLoggingInterceptor.Level.BODY` plus a custom `RestCall` interceptor that
+`peekBody(Long.MAX_VALUE)` on *every* response are added unconditionally — active in release.
+This logs auth tokens and student data, and buffers every response body.
+
+**Do:**
+- Enable `buildFeatures { buildConfig true }` and gate both interceptors on `BuildConfig.DEBUG`.
+- Keep `BODY` for debug; use `BASIC` or `NONE` for release.
+- Delete the temporary `RestCall` response logger, or gate it behind debug.
+
+**Verify:** Release build's logcat shows no `RestCall` / `Authorization` / response bodies;
+`strings` on the release APK contains no `RestCall` tag; debug logging still works locally.
+
+---
+
+## SS-PROD-10 Build-time backend endpoint configuration
+
+**Outcome:** API base URL is injected per build type/flavor, not hardcoded in source.
+
+**Repo / files:** `study-shield` — `RetrofitClient.kt:14`, `mobile/build.gradle`.
+
+**Evidence:** `private const val BASE_URL = "https://study-shield-backend-komv.onrender.com"`
+is compiled into every build. There is no way to point a debug build at local/staging, and
+changing environments requires a source edit and rebuild.
+
+**Do:**
+- Add `buildConfigField "String", "API_BASE_URL", ...` per build type (debug → local/staging,
+  release → production); read it from `BuildConfig` in `RetrofitClient`.
+- Allow a Gradle property / CI env override so builds are not tied to one host.
+- Decide the production hostname before release (the current Render URL is a deployment name,
+  not a stable product domain) and ensure HTTPS.
+
+**Verify:** Debug and release artifacts report different base URLs; prod release points at the
+production host; no URL literal remains in `RetrofitClient.kt`.
+
+---
+
+## SS-PROD-11 Release build hardening + release CI
+
+**Outcome:** R8-minified release builds with real versioning, built reproducibly in CI.
+
+**Repo / files:** `study-shield` — `mobile/build.gradle`, `tv/build.gradle`,
+`.github/workflows/ci.yml`, new `.github/workflows/release.yml`.
+
+**Evidence:** both modules have `minifyEnabled false`, empty ProGuard rules, and
+`versionCode 1` / `versionName "1.0"` hardcoded. CI only runs debug unit tests — it never
+builds a release artifact.
+
+**Do:**
+- Enable `minifyEnabled true` + `shrinkResources true` for release; add keep rules for
+  kotlinx.serialization, Room, and Retrofit (verify models survive R8).
+- Single-source `versionCode`/`versionName` (e.g. `gradle.properties` or a `version.properties`
+  file) so mobile and TV bump deliberately.
+- Add a tag-triggered release workflow that runs `:mobile:bundleRelease` (and `:tv:bundleRelease`
+  once SS-PROD-03 is decided), uploads AABs, `mapping.txt`, and checksums.
+- Add at least an `assembleRelease` compile check to PR CI so R8 breakage is caught before tags.
+
+**Verify:** `bundleRelease` green for both modules; R8-processed app runs the sign-in → quiz →
+TV-talk path; artifacts + `mapping.txt` uploaded; version values present in the AAB.
+
+---
+
+## Revised suggested order
+
+1. SS-PROD-03 listing shape (decision) — **still blocking**.
+2. SS-PROD-02 signing + **SS-PROD-09 / SS-PROD-10** build config.
+3. SS-PROD-01 API 36 bump.
+4. SS-PROD-04 TV permissions.
+5. SS-PROD-05 location scoping.
+6. SS-PROD-06 cleartext scoping.
+7. SS-PROD-11 release hardening + CI.
+8. SS-PROD-07 signed AAB + checklist.
+9. SS-PROD-08 console paperwork.
