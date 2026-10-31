@@ -41,6 +41,7 @@ nav:
   - Backlog:
       - How we use this backlog: backlog/index.md
       - Feed a story to Buzz: backlog/llm-brief.md
+      - Current feature files: backlog/feature-catalog.md
       - Code audit (implemented vs not): backlog/code-audit.md
       - Experience: backlog/experience.md
       - Design: backlog/design.md
