@@ -44,6 +44,7 @@ Front matter: `id`, `name`, `legacy_id`, `scope`, `components`, `priority`, `eff
 Body:
 
 - User story, with a persona from [index.md](index.md) (Kid, Parent, Second adult, Content author, Operator, Engineering)
+- Components: the repos to open, and for study-shield whether the work is in `mobile`, `tv`, or both
 - Technical context
 - Two acceptance scenarios, one of them a failure case
 - API / data contract impact, or None
@@ -72,7 +73,7 @@ Before any code:
 3. If status is Implemented, or review is Reject, stop. Do not look for a substitute id.
 
 Then:
-A. Implement only that file. Stay inside its components, acceptance, and card excerpts.
+A. Implement only that file. Open only the repos and modules in its Components section. Stay inside its acceptance and card excerpts.
 B. Obey the invariants on llm-brief.md.
 C. In each code repo you change, use a branch whose name contains the FEAT id. The pull request title must contain the FEAT id.
 D. Verify with the file's testing section.
