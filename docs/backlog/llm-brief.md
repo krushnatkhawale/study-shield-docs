@@ -51,7 +51,7 @@ Body:
 - Testing requirements
 - Card excerpts: paths and limits for this feature
 
-`legacy_id` is only a search handle. The filename is the id that goes on the branch and the pull request.
+`legacy_id` is only a search handle. The filename is the id. The branch and the commit subject also carry a short description taken from the feature `name`, so `git log` on `main` of study-shield-docs shows which feature landed.
 
 ## Run one feature
 
@@ -75,11 +75,14 @@ Before any code:
 Then:
 A. Implement only that file. Open only the repos and modules in its Components section. Stay inside its acceptance and card excerpts.
 B. Obey the invariants on llm-brief.md.
-C. In each code repo you change, use a branch whose name contains the FEAT id. The pull request title must contain the FEAT id.
+C. Name the branch and the commit so the feature is recognizable on `main`.
+   - Branch, in every repo you commit, including study-shield-docs: `FEAT-<id>-<slug>`. `<slug>` is two to four kebab-case words from the feature name. Example: `FEAT-1793560481378-quiz-setup-select`.
+   - Commit subject, and the pull request title: `FEAT-<id>: <feature name>`. Example: `FEAT-1793560481378: Quiz Setup Select sends that quiz`.
+   - A fast-forward onto `main` keeps the commit subject, not the branch name. The subject is what shows in the history of study-shield-docs.
 D. Verify with the file's testing section.
 E. Update study-shield/docs/SCREEN_FLOWS_MOBILE.md and/or SCREEN_FLOWS_TV.md if the UI changed.
 F. Do not move the markdown file to implemented/ or rejected/. Do not set review. Do not edit index.md or this brief.
-G. Optional: set status to In Progress on that one feature file, in its own docs commit. Skip this if you are not committing docs.
+G. Optional: set status to In Progress on that one feature file, in its own study-shield-docs commit on `FEAT-<id>-<slug>`, with subject `FEAT-<id>: <feature name>`. Skip this if you are not committing docs.
 H. Open the pull request. Do not merge it unless the person who invoked you asks.
 I. Stop. Do not start another id.
 
@@ -92,7 +95,7 @@ If verify fails, stop and report what shipped and what is left. Do not mark the 
 
 | Who | What they change |
 |-----|------------------|
-| Developer agent | Code, tests, screen-flow notes, and a pull request whose title contains the FEAT id. |
+| Developer agent | Code, tests, screen-flow notes, and a pull request titled `FEAT-<id>: <feature name>` from branch `FEAT-<id>-<slug>`. |
 | Friday backlog job | After that pull request is merged, moves the file from `current/` to `implemented/` and sets `status: Implemented`. |
 | A human | Sets `review: Reject` to take a file out of the queue. |
 
