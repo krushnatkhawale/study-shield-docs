@@ -23,7 +23,7 @@ static site with **MkDocs** (Material theme).
 ## Layout
 
 - `docs/index.md` — entry point / index
-- `docs/backlog/` — UX stories by role (experience, design, business, reliability, content, quality)
+- `docs/backlog/` — one feature file per story under `current/`, `implemented/`, and `rejected/`, plus `llm-brief.md` for a developer agent
 - `docs/architecture/` — overall system, backend modulith, mobile & TV
 - `docs/per-repo/` — one guide per app, linking to each repo's own docs
 - `docs/decisions/` — ADR log + question-bank process rules

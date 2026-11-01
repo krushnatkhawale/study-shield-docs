@@ -27,7 +27,7 @@ The whole system as a single box, seen from the outside: who uses it, and what i
 
 ## Start here
 
-- **Backlog** — [paste-ready stories](backlog/index.md) · [how to feed Buzz](backlog/llm-brief.md) · [code audit](backlog/code-audit.md)
+- **Backlog** — [live queue](backlog/index.md) · [implement one feature](backlog/llm-brief.md)
 - **Architecture** — [overall system](architecture/system.md), [backend modulith](architecture/backend.md), [mobile & TV](architecture/mobile-tv.md)
 - **Per-repo** — [backend](per-repo/backend.md), [admin](per-repo/admin.md), [mobile & TV](per-repo/mobile-tv.md), [open-school](per-repo/open-school.md)
 - **Reference** — [academic structure](reference/academic-structure.md) · [modulith module](reference/ss-modulith.md) · [regression suite](reference/ss-regression-suite.md) · [tech debt](reference/tech-debt.md)

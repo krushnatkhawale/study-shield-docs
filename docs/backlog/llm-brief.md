@@ -6,7 +6,7 @@ Say this to a developer agent. Replace the id with a file in `docs/backlog/curre
 Refer to docs/backlog/llm-brief.md and implement FEAT-<id> from the current backlog.
 ```
 
-The agent reads this page, then that one file. It does not paste an SS-* card. Those pages stay as the original briefs. The feature file is the work.
+The agent reads this page, then that one file. The feature file is the whole brief.
 
 ## What the agent must read first (local)
 
@@ -48,7 +48,7 @@ Body:
 - Two acceptance scenarios, one of them a failure case
 - API / data contract impact, or None
 - Testing requirements
-- Card excerpts: paths and limits copied from the old SS card
+- Card excerpts: paths and limits for this feature
 
 `legacy_id` is only a search handle. The filename is the id that goes on the branch and the pull request.
 
@@ -77,7 +77,7 @@ B. Obey the invariants on llm-brief.md.
 C. In each code repo you change, use a branch whose name contains the FEAT id. The pull request title must contain the FEAT id.
 D. Verify with the file's testing section.
 E. Update study-shield/docs/SCREEN_FLOWS_MOBILE.md and/or SCREEN_FLOWS_TV.md if the UI changed.
-F. Do not move the markdown file to implemented/ or rejected/. Do not set review. Do not edit the SS-* pages (index story cards, experience, design, business-value, reliability, content, quality-and-speed, productionization, code-audit).
+F. Do not move the markdown file to implemented/ or rejected/. Do not set review. Do not edit index.md or this brief.
 G. Optional: set status to In Progress on that one feature file, in its own docs commit. Skip this if you are not committing docs.
 H. Open the pull request. Do not merge it unless the person who invoked you asks.
 I. Stop. Do not start another id.
