@@ -45,8 +45,11 @@ Source: `diagrams/backend-component.puml` (rendered with PlantUML + C4-PlantUML 
 
 ## Content loading model
 
-The backend **starts empty** (`app.catalog-seeding.enabled: false`). Content is loaded on
-demand via **`POST /api/v1/questions/load`**, which auto-creates the whole chain:
+`CatalogStartupSeeder` **pre-seeds the curated bands at boot** (`app.catalog-seeding.enabled`,
+default `true`) for the board-agnostic `ALL` board, after the academic structure is loaded.
+A band that cannot be resolved is logged and skipped; it never stops the app from booting.
+Content can also be loaded on demand via **`POST /api/v1/questions/load`**, which
+auto-creates the whole chain:
 
 ```
 Board → ClassGrade → Subject → ContentPack → Quiz → Question
@@ -56,10 +59,13 @@ from items carrying `boardCode` / `className` / `age` / `subject`. See
 [question-bank guide](../decisions/question-bank-guide.md) for the full rules.
 
 Quiz bundles are returned per class by `POST /api/v1/quiz-bundles`: **one freemium quiz
-per subject that has questions** (Math, EVS, English, Hindi for curated classes). Lazy
-`QuizBundleSeeder` fills missing subject quizzes from the curated bank. Issued bundles
-are idempotent — rebuild with `POST /api/v1/quiz-bundles/rebuild-catalog` (ADMIN) so
-kids are not stuck on an old 2-quiz snapshot.
+per subject that has questions** (Math, EVS, English, Hindi for curated classes). The
+request path only reads: `AcademicCatalogResolver.findBoardClass` never creates rows. A
+miss for a curated class queues a background seed (`CatalogMissSeeder`,
+`app.catalog-seeding.async-on-miss`, default `true`) and returns a fast retryable error;
+the next request is served from the seeded catalog. Issued bundles are idempotent —
+rebuild with `POST /api/v1/quiz-bundles/rebuild-catalog` (ADMIN) so kids are not stuck
+on an old snapshot.
 
 ## Config
 
@@ -74,7 +80,8 @@ kids are not stuck on an old 2-quiz snapshot.
   `questions.version_group_id`/`version_number`, so dev and prod stay in lock-step
   regardless of which profile starts first.
 - `app.jwt.expiration-ms=86400000`
-- `app.catalog-seeding.enabled=false` (on-demand content model)
+- `app.catalog-seeding.enabled=true` (startup pre-seed; set `false` for the on-demand-only model)
+- `app.catalog-seeding.async-on-miss=true` (background seed on a bundle miss; requests never seed)
 
 ## Build / test
 

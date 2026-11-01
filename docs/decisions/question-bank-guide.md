@@ -178,8 +178,12 @@ To extend the bank to a brand-new subject (e.g. `Science`, `Art`), the wiring is
    it), since a bundle only serves offers that exist.
 4. Regenerate `question-bank.json`.
 
-## Config flag
+## Config flags
 
-- `app.catalog-seeding.enabled` — when `false` (default now), the startup catalog seeder
-  does **not** run; content is provided on demand via the loader. Set `true` only if you
-  intentionally want startup seeding re-enabled.
+- `app.catalog-seeding.enabled` — default `true`: `CatalogStartupSeeder` pre-seeds every
+  curated band at boot. Set `false` when content is provided only on demand via the
+  loader. An unresolvable band is logged and skipped so it cannot block boot.
+- `app.catalog-seeding.async-on-miss` — default `true`: a bundle request for a curated
+  class missing from the pre-seeded catalog queues the seed on the dedicated catalog
+  thread and fails fast; the request path only reads (see `TD-1` in
+  [tech-debt.md](../reference/tech-debt.md)).

@@ -3,6 +3,7 @@
 ## TD-1: Move freemium catalog seeding out of the request path
 
 **Added:** 2026-08-21
+**Resolved:** 2026-11-01 (FEAT-1793475593350)
 **Source:** HikariCP "apparent connection leak" warnings + 433-second `POST /api/v1/quiz-bundles` in production logs.
 
 ### Problem
@@ -32,6 +33,24 @@ after the move.
 - `POST /api/v1/quiz-bundles` completes in < 2s even for an unseen class.
 - No HikariCP leak warnings during seeding.
 
+### Resolution
+
+- `QuizBundleService.issue` no longer calls `ensureCatalogForClass`. It resolves the
+  class with the read-only `AcademicCatalogResolver.findBoardClass` (display name →
+  ALL board → heuristic ordinal) and returns a fast `400` on a miss.
+- `CatalogStartupSeeder` pre-seeds every curated band for the `ALL` board at boot,
+  ordered after `AcademicStructureBootSeeder`. One failing band is logged and skipped
+  instead of aborting startup (this uncovered `PreNursery`, now mapped to the
+  foundation ordinal 1).
+- `CatalogMissSeeder` queues a missed seed on a dedicated single-thread executor
+  (`app.catalog-seeding.async-on-miss`, default `true`). Concurrent misses for the same
+  class share one queued seed; seeding never joins the request transaction.
+- `app.catalog-seeding.enabled` now defaults to `true` (env `CATALOG_SEEDING_ENABLED`).
+- Verified against the regression profile (H2): startup seeded 14/14 curated classes in
+  ~0.4s. First request for an unseen board+class returned `400` in 28ms while the
+  background seed finished in 22ms; the second request returned `200` in 61ms. No
+  Hikari leak warnings. `content-freemium.feature` now asserts the read-only path.
+
 ## TD-4: Migrations assumed stale `public.*` tables; seeding now flag-gated (2026-08-22)
 
 Fresh-database rebuild exposed two issues:
@@ -41,9 +60,10 @@ Fresh-database rebuild exposed two issues:
   introduced. Fixed to point at the canonical `user_.users` and `quiz.quiz_attempts`.
   The dev DB was dropped (`content`, `user_`, `quiz`, `tv`, `public` schemas) and
   rebuilt from V1–V9; all migrations now run clean on an empty database.
-- `CatalogStartupSeeder` is gated by `app.catalog-seeding.enabled` (default `true`);
-  the dev DB currently runs with it disabled per product decision — catalog is empty
-  until data is set up deliberately.
+- `CatalogStartupSeeder` is gated by `app.catalog-seeding.enabled` (default `true`).
+  At the time, the dev DB ran with it disabled per product decision; since
+  FEAT-1793475593350 the default is `true` and operators can set
+  `CATALOG_SEEDING_ENABLED=false` to keep the catalog deliberately empty.
 
 ### Follow-ups
 
@@ -51,5 +71,6 @@ Fresh-database rebuild exposed two issues:
   don't pin a schema. Set the default schema or add `@Table(schema=...)` and switch
   `ddl-auto` to `validate`.
 - `POST /api/v1/users` accepts malformed emails (201) — add bean validation.
-- Regression scenarios "Issue quiz bundle seeds catalog..." assert auto-seeding;
-  update them for the flag-gated behavior.
+- ~~Regression scenarios "Issue quiz bundle seeds catalog..." assert auto-seeding;
+  update them for the flag-gated behavior.~~ Done in FEAT-1793475593350: the scenario
+  now asserts the read-only, pre-seeded path.
